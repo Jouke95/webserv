@@ -2,3 +2,4 @@ webserv
 server
 *.o
 .idea
+obj/
