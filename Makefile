@@ -6,6 +6,7 @@ SRCS    = src/main.cpp \
 		  src/Config.cpp \
 		  src/Server.cpp \
 		  src/Client.cpp \
+		  src/Parser.cpp \
 		  src/HttpRequest.cpp \
 		  src/HttpResponse.cpp
 
