@@ -1,27 +1,25 @@
-NAME    = webserv
-CXX     = c++
-CXXFLAGS = -Wall -Wextra -Werror
+NAME = webserv
 
-SRCS    = src/main.cpp \
-		  src/Config.cpp \
-		  src/Server.cpp \
-		  src/Client.cpp \
-		  src/Parser.cpp \
-		  src/HttpRequest.cpp \
-		  src/HttpResponse.cpp
+CC = c++
+CFLAGS = -Wall -Wextra -Werror -Iincludes
 
-OBJS    = $(SRCS:.cpp=.o)
+SRCS = src/main.cpp src/Parser.cpp src/Server.cpp
+
+OBJ_DIR = obj
+
+OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -I includes -c $< -o $@
+$(OBJ_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS)
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
 	rm -f $(NAME)
