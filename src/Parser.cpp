@@ -44,4 +44,3 @@ std::string Parser::createResponse() const
 		<< body;
 	return oss.str();
 }
-
