@@ -22,6 +22,27 @@ public:
 
 	// Methods
 	std::string createResponse() const;
+
+	struct P
 };
+
+// Parsestruct:
+// responseStatusCode
+// responseStatusMessage
+// responseContent-Type
+// responseContent-Length
+// responseConnection
+// responseBody
+
+// requestMethod
+// requestHost
+// requestUserAgent
+// path = _path
+// requestBody
+// requestContentLength
+// requestContentType
+// requestQueryString
+// requestConnection
+// requestEncoding
 
 #endif
