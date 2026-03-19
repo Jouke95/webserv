@@ -1,0 +1,69 @@
+#include <HttpResponse.hpp>
+
+HttpResponse::HttpResponse() : _statusCode(0), _contentLength(0)
+{
+}
+
+HttpResponse::~HttpResponse()
+{
+}
+
+void HttpResponse::setStatusCode(int statusCode)
+{
+	_statusCode = statusCode;
+}
+
+void HttpResponse::setStatusMessage(const std::string& statusMessage)
+{
+	_statusMessage = statusMessage;
+}
+
+void HttpResponse::setConnection(const std::string& connection)
+{
+	_connection = connection;
+}
+
+void HttpResponse::setContentType(const std::string& contentType)
+{
+	_contentType = contentType;
+}
+
+void HttpResponse::setBody(const std::string& body)
+{
+	_body = body;
+}
+
+void HttpResponse::setContentLength(int contentLength)
+{
+	_contentLength = contentLength;
+}
+
+int HttpResponse::getStatusCode() const
+{
+	return _statusCode;
+}
+
+std::string HttpResponse::getStatusMessage()
+{
+	return _statusMessage;
+}
+
+std::string HttpResponse::getConnection()
+{
+	return _connection;
+}
+
+std::string HttpResponse::getContentType()
+{
+	return _contentType;
+}
+
+std::string HttpResponse::getBody()
+{
+	return _body;
+}
+
+int HttpResponse::getContentLength() const
+{
+	return _contentLength;
+}

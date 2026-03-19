@@ -3,7 +3,7 @@ NAME = webserv
 CC = c++
 CFLAGS = -Wall -Wextra -Werror -Iincludes
 
-SRCS = src/main.cpp src/Parser.cpp src/Server.cpp
+SRCS = src/main.cpp src/Parser.cpp src/Server.cpp src/HttpRequest.cpp src/HttpResponse.cpp
 
 OBJ_DIR = obj
 

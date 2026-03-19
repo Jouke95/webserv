@@ -75,6 +75,3 @@ int Server::waitForRequest()
 		std::cout << "Connection closed.\n";
 	}
 }
-
-
-
