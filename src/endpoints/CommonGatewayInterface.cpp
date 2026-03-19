@@ -1,7 +1,9 @@
-#include "CommonGatewayInterface.hpp"
-#include "../../includes/endpoints/CommonGatewayInterface.hpp"
+#include "endpoints/CommonGatewayInterface.hpp"
 
 #include <sched.h>
+
+#include "endpoints/AEndpoint.hpp"
+#include "endpoints/TextEndpoint.hpp"
 
 CommonGatewayInterface::CommonGatewayInterface(HttpRequest request, HttpResponse response) :
 _request(request), _response(response)
@@ -30,9 +32,10 @@ CommonGatewayInterface CommonGatewayInterface::operator=(const CommonGatewayInte
 HttpResponse CommonGatewayInterface::Redirect()
 {
 	if (_request.getPath() == "/text")
-		
-		// voer image functie uit.
-	
+	{
+		TextEndpoint endpoint(_request, _response);
+		return endpoint.handle();
+	}
 			
 	return _response;
 }
