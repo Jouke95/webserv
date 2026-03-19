@@ -1,15 +1,20 @@
-#ifndef WEBSERV_ENDPOINTBASECLASS_HPP
-#define WEBSERV_ENDPOINTBASECLASS_HPP
+#ifndef WEBSERV_AENDPOINT_HPP
+#define WEBSERV_AENDPOINT_HPP
+
+#include "../HttpRequest.hpp"
+#include "../HttpResponse.hpp"
 
 class AEndpoint
 {
-private:
-	
+protected:
+	HttpRequest  _request;
+	HttpResponse _response;
+
 public:
-	AEndpoint();
-	~AEndpoint();
-	AEndpoint(const AEndpoint& other) = delete;
-	const AEndpoint& operator=(const AEndpoint& other) = delete;
+	AEndpoint(HttpRequest& request, HttpResponse& response) : _request(request), _response(response) {}
+	virtual ~AEndpoint() = default;
+
+	virtual HttpResponse handle() = 0;
 };
 
 #endif
