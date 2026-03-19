@@ -6,7 +6,7 @@ int main()
     int     result;
     
     result = server.start();
-    if (result == 1)
-        exit(1);
+    if (result != 0)
+        exit(result);
     server.waitForRequest();
 }

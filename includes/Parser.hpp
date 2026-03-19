@@ -23,7 +23,6 @@ public:
 	// Methods
 	std::string createResponse() const;
 
-	struct P
 };
 
 // Parsestruct:

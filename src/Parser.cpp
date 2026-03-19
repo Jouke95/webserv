@@ -1,7 +1,3 @@
-//
-// Created by tridley on 18-03-2026.
-//
-
 #include "Parser.hpp"
 
 #include <sstream>

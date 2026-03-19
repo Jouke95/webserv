@@ -22,15 +22,15 @@ public:
 	HttpRequest(const HttpRequest& other) = delete;
 	const HttpRequest& operator=(const HttpRequest& other) = delete;
 	
-	void		setMethod();
-	void		setHost();
-	void		setPath();
-	void		setQueryString();
-	void		setBody();
-	void		setContentType();
-	void		setUserAgent();
-	void		setConnection();
-	void		setContentLength();
+	void		setMethod(const std::string& method);
+	void		setHost(const std::string& host);
+	void		setPath(const std::string& path);
+	void		setQueryString(const std::string& query);
+	void		setBody(const std::string& body);
+	void		setContentType(const std::string& contentType);
+	void		setUserAgent(const std::string& userAgent);
+	void		setConnection(const std::string& connection);
+	void		setContentLength(int contentLength);
 
 	std::string getMethod();
 	std::string getHost();
@@ -40,7 +40,7 @@ public:
 	std::string getContentType();
 	std::string getUserAgent();
 	std::string getConnection();
-	int			getContentLength();
+	int			getContentLength() const;
 };
 
 #endif

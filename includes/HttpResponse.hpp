@@ -18,19 +18,19 @@ public:
 	HttpResponse(const HttpResponse& other) = delete;
 	const HttpResponse& operator=(const HttpResponse& other) = delete;
 
-	void		setStatusCode();
-	void		setStatusMessage();
-	void		setConnection();
-	void		setContentType();
-	void		setBody();
-	void		setContentLength();
+	void		setStatusCode(int statusCode);
+	void		setStatusMessage(const std::string& statusMessage);
+	void		setConnection(const std::string& connection);
+	void		setContentType(const std::string& contentType);
+	void		setBody(const std::string& body);
+	void		setContentLength(int contentLength);
 
-	int			getStatusCode();
+	int			getStatusCode() const;
 	std::string getStatusMessage();
 	std::string getConnection();
 	std::string getContentType();
 	std::string getBody();
-	int			getContentLength();
+	int			getContentLength() const;
 };
 
 #endif
