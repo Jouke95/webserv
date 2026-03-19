@@ -8,6 +8,26 @@ HttpResponse::~HttpResponse()
 {
 }
 
+HttpResponse::HttpResponse(const HttpResponse& other)
+{
+	*this = other;
+}
+
+HttpResponse& HttpResponse::operator=(const HttpResponse& other)
+{
+	if (this != &other)
+	{
+		_statusCode = other._statusCode;
+		_body = other._body;
+		_connection = other._connection;
+		_contentLength = other._contentLength;
+		_statusMessage = other._statusMessage;
+		_contentType = other._contentType;
+	}
+	return (*this);
+}
+
+
 void HttpResponse::setStatusCode(int statusCode)
 {
 	_statusCode = statusCode;

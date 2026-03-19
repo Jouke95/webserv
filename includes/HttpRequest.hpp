@@ -14,13 +14,13 @@ private:
 	std::string _contentType;
 	std::string _userAgent;
 	std::string _connection;
-	int         _contentLength;
+	int         _contentLength{};
 
 public:
 	HttpRequest();
 	~HttpRequest();
-	HttpRequest(const HttpRequest& other) = delete;
-	const HttpRequest& operator=(const HttpRequest& other) = delete;
+	HttpRequest(const HttpRequest& other);
+	HttpRequest& operator=(const HttpRequest& other);
 	
 	void		setMethod(const std::string& method);
 	void		setHost(const std::string& host);
