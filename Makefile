@@ -1,9 +1,10 @@
 NAME = webserv
 
 CC = c++
-CFLAGS = -Wall -Wextra -Werror -Iincludes -Iincludes/endpoints
+CFLAGS = -Wall -Wextra -Werror -Iincludes
 
-SRCS = src/main.cpp src/Parser.cpp src/Server.cpp src/HttpRequest.cpp src/HttpResponse.cpp
+SRCS = src/main.cpp src/Parser.cpp src/Server.cpp src/HttpRequest.cpp src/HttpResponse.cpp \
+src/endpoint/CommonGatewayInterface.cpp src/endpoint/AEndpoint.cpp
 
 OBJ_DIR = obj
 

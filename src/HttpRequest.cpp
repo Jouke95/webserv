@@ -8,6 +8,29 @@ HttpRequest::HttpRequest() : _contentLength(0)
 HttpRequest::~HttpRequest()
 = default;
 
+HttpRequest::HttpRequest(const HttpRequest& other)
+{
+	*this = other;
+}
+
+HttpRequest& HttpRequest::operator=(const HttpRequest& other)
+{
+	if (this != &other)
+	{
+		_body = other._body;
+		_connection = other._connection;
+		_contentLength = other._contentLength;
+		_contentType = other._contentType;
+		_host = other._host;
+		_method = other._method;
+		_path = other._path;
+		_queryString = other._queryString;
+		_userAgent = other._userAgent;
+	}
+	return (*this);
+}
+
+
 void HttpRequest::setMethod(const std::string& method)
 {
 	_method = method;
