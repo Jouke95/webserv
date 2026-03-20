@@ -55,9 +55,11 @@ int TextEndpoint::handleDelete()
 		_response.setStatusCode(400);
 		return 1;
 	}
-	file << std::endl;
+	file << "";
 
 	file.close();
+	_response.setBody("");
+	_response.setContentType("text/html");
 	return 0;
 }
 
@@ -74,6 +76,8 @@ int TextEndpoint::handlePost()
 	file << _request.getBody() << std::endl;
 
 	file.close();
+	_response.setBody("");
+	_response.setContentType("text/html");
 	return 0;
 }
 

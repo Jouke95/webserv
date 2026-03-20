@@ -1,5 +1,6 @@
 #include "Parser.hpp"
 
+#include <iostream>
 #include <sstream>
 
 
@@ -14,12 +15,26 @@ Parser::~Parser()
 std::string Parser::buildResponseString() const
 {
 	std::ostringstream oss;
+	if (_request.getMethod() == "OPTIONS")
+	{
+		oss << "HTTP/1.1 200 OK\r\n"
+			<< "Access-Control-Allow-Origin: *\r\n"
+			<< "Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS\r\n"
+			<< "Access-Control-Allow-Headers: Content-Type\r\n"
+			<< "Content-Length: 0\r\n"
+			<< "Connection: close\r\n\r\n";
+		return oss.str();
+	}
+	
 	oss << _request.getVersion() << " " << _response.getStatusCode() << " " << _response.getStatusMessage() << "\r\n"
-		<< "Server: webserv/1.0\r\n"   
+		<< "Server: webserv/1.0\r\n"
+		<< "Access-Control-Allow-Origin: *\r\n"
 		<< "Content-Type: " << _response.getContentType() << "\r\n"
 		<< "Content-Length: " << _response.getContentLength() << "\r\n"
 		<< "Connection: close\r\n\r\n"
 		<< _response.getBody();
+
+	std::cout << "Response String: " << oss.str() << std::endl;
 	return oss.str();
 }
 
