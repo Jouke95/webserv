@@ -7,6 +7,7 @@ class HttpResponse {
 private:
 	int         _statusCode;
 	std::string _statusMessage;
+	std::string _version;
 	std::string _connection;
 	std::string _contentType;
 	std::string _body;
@@ -24,12 +25,14 @@ public:
 	void		setContentType(const std::string& contentType);
 	void		setBody(const std::string& body);
 	void		setContentLength(int contentLength);
+	void		setVersion(const std::string &version);
 
 	int			getStatusCode() const;
 	std::string getStatusMessage();
 	std::string getConnection();
 	std::string getContentType();
 	std::string getBody();
+	std::string getVersion();
 	int			getContentLength() const;
 };
 

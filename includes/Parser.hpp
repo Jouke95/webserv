@@ -3,14 +3,21 @@
 
 #include <string>
 
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
+
 class Parser
 {
 private:
 
 	void buildPath();
+
+	HttpRequest _request;
+	HttpResponse _response;
+
 	std::string _path;
-	std::string _response;
-	std::string _request;
+	std::string _responseString;
+	std::string _requestString;
 	
 
 public:
@@ -21,7 +28,10 @@ public:
 	const Parser& operator=(const Parser& other) = delete;
 
 	// Methods
-	std::string createResponse() const;
+	std::string buildResponse() const;
+	HttpRequest getRequest();
+	HttpResponse getResponse();
+	void buildRequest();
 
 };
 

@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <Parser.hpp>
 
+#include "endpoints/CommonGatewayInterface.hpp"
+
 Server::Server() : _serverFileDescriptor(-1), _clientFileDescriptor(-1)
 {
 	
@@ -63,12 +65,16 @@ int Server::waitForRequest()
 		std::string request = buf;
 		
 		std::cout << request << std::endl;
+		
 		Parser parser(request);
-		// DIT DOEN WE LATER
-		// _parseStruct = parser.parse(_request);
-		// body = commonGatewayInterface(_parseStruct);
-		// _response = parser.createResponse(body, _parseStruct);
-		std::string response = parser.createResponse();
+
+		parser.buildRequest();
+		HttpRequest httpRequest = parser.getRequest();
+		HttpResponse httpResponse = parser.getResponse();
+		
+		CommonGatewayInterface CGI(httpRequest, httpResponse);
+		
+		std::string response = parser.buildResponse(httpResponse);
 
 		write(this->_clientFileDescriptor, response.c_str(), response.size());
 		close(this->_clientFileDescriptor);

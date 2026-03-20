@@ -76,6 +76,12 @@ void HttpRequest::setContentLength(int contentLength)
 	_contentLength = contentLength;
 }
 
+void HttpRequest::setVersion(std::string& version)
+{
+	_version = version;
+}
+
+
 std::string HttpRequest::getMethod()
 {
 	return _method;
@@ -115,6 +121,12 @@ std::string HttpRequest::getConnection()
 {
 	return _connection;
 }
+
+std::string HttpRequest::getVersion()
+{
+	return _version;
+}
+
 
 int HttpRequest::getContentLength() const
 {
