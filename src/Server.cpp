@@ -71,10 +71,15 @@ int Server::waitForRequest()
 		parser.buildRequest();
 		HttpRequest httpRequest = parser.getRequest();
 		HttpResponse httpResponse = parser.getResponse();
-		
+
+		std::cout << "Request Method: " << httpRequest.getMethod() << std::endl;
 		CommonGatewayInterface CGI(httpRequest, httpResponse);
+
+		httpResponse = CGI.Redirect();
 		
-		std::string response = parser.buildResponse(httpResponse);
+		std::cout << "Response: " << httpResponse.getStatusMessage() << std::endl;
+		parser.setResponse(httpResponse);
+		std::string response = parser.buildResponseString();
 
 		write(this->_clientFileDescriptor, response.c_str(), response.size());
 		close(this->_clientFileDescriptor);

@@ -9,9 +9,6 @@
 class Parser
 {
 private:
-
-	void buildPath();
-
 	HttpRequest _request;
 	HttpResponse _response;
 
@@ -28,11 +25,12 @@ public:
 	const Parser& operator=(const Parser& other) = delete;
 
 	// Methods
-	std::string buildResponse() const;
+	std::string buildResponseString() const;
 	HttpRequest getRequest();
 	HttpResponse getResponse();
 	void buildRequest();
 
+	void setResponse(HttpResponse response);
 };
 
 // Parsestruct:

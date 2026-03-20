@@ -28,11 +28,11 @@ public:
 	void		setVersion(const std::string &version);
 
 	int			getStatusCode() const;
-	std::string getStatusMessage();
-	std::string getConnection();
-	std::string getContentType();
-	std::string getBody();
-	std::string getVersion();
+	std::string getStatusMessage() const;
+	std::string getConnection() const;
+	std::string getContentType() const;
+	std::string getBody() const;
+	std::string getVersion() const;
 	int			getContentLength() const;
 };
 

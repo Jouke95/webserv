@@ -41,6 +41,7 @@ int TextEndpoint::handleGet()
 
 	file.close();
 	_response.setBody(content);
+	_response.setContentType("text/html");
 	return 0;
 }
 

@@ -6,35 +6,20 @@
 Parser::Parser(const std::string& request)
 {
 	_requestString = request;
-	buildPath();
 }
 
 Parser::~Parser()
 = default;
 
-void Parser::buildPath()
+std::string Parser::buildResponseString() const
 {
-	size_t start = _request.find(' ') + 1;
-	size_t end   = _request.find(' ', start);
-	if (start == std::string::npos || end == std::string::npos)
-		_path = "/";
-	_path = _request.substr(start, end - start);
-}
-
-std::string Parser::buildResponse() const
-{
-	std::string body =
-		"<!DOCTYPE html><html><body>"
-		"<h1>Hello from C++! joe</h1>"
-		"<p>Path: " + _path + "</p>"
-		"</body></html>";
-
 	std::ostringstream oss;
-	oss << "HTTP/1.1 200 OK\r\n"
-		<< "Content-Type: text/html\r\n"
-		<< "Content-Length: " << body.size() << "\r\n"
+	oss << _request.getVersion() << " " << _response.getStatusCode() << " " << _response.getStatusMessage() << "\r\n"
+		<< "Server: webserv/1.0\r\n"   
+		<< "Content-Type: " << _response.getContentType() << "\r\n"
+		<< "Content-Length: " << _response.getContentLength() << "\r\n"
 		<< "Connection: close\r\n\r\n"
-		<< body;
+		<< _response.getBody();
 	return oss.str();
 }
 
@@ -101,3 +86,10 @@ void Parser::buildRequest()
 		body.pop_back();
 	_request.setBody(body);
 }
+
+void Parser::setResponse(HttpResponse response)
+{
+	_response = response;
+	_response.setContentLength(response.getBody().length());
+}
+

@@ -69,27 +69,27 @@ int HttpResponse::getStatusCode() const
 	return _statusCode;
 }
 
-std::string HttpResponse::getStatusMessage()
+std::string HttpResponse::getStatusMessage() const
 {
 	return _statusMessage;
 }
 
-std::string HttpResponse::getConnection()
+std::string HttpResponse::getConnection() const
 {
 	return _connection;
 }
 
-std::string HttpResponse::getContentType()
+std::string HttpResponse::getContentType() const
 {
 	return _contentType;
 }
 
-std::string HttpResponse::getBody()
+std::string HttpResponse::getBody() const
 {
 	return _body;
 }
 
-std::string HttpResponse::getVersion()
+std::string HttpResponse::getVersion() const
 {
 	return _version;
 }
