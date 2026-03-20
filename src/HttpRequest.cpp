@@ -82,47 +82,47 @@ void HttpRequest::setVersion(std::string& version)
 }
 
 
-std::string HttpRequest::getMethod()
+std::string HttpRequest::getMethod() const
 {
 	return _method;
 }
 
-std::string HttpRequest::getHost()
+std::string HttpRequest::getHost() const
 {
 	return _host;
 }
 
-std::string HttpRequest::getPath()
+std::string HttpRequest::getPath() const
 {
 	return _path;
 }
 
-std::string HttpRequest::getQueryString()
+std::string HttpRequest::getQueryString() const
 {
 	return _queryString;
 }
 
-std::string HttpRequest::getBody()
+std::string HttpRequest::getBody() const
 {
 	return _body;
 }
 
-std::string HttpRequest::getContentType()
+std::string HttpRequest::getContentType()  const
 {
 	return _contentType;
 }
 
-std::string HttpRequest::getUserAgent()
+std::string HttpRequest::getUserAgent() const
 {
 	return _userAgent;
 }
 
-std::string HttpRequest::getConnection()
+std::string HttpRequest::getConnection() const
 {
 	return _connection;
 }
 
-std::string HttpRequest::getVersion()
+std::string HttpRequest::getVersion() const
 {
 	return _version;
 }

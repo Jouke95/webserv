@@ -34,15 +34,15 @@ public:
 	void		setContentLength(int contentLength);
 	void		setVersion(std::string& version);
 
-	std::string getMethod();
-	std::string getHost();
-	std::string getPath();
-	std::string getQueryString();
-	std::string getBody();
-	std::string getContentType();
-	std::string getUserAgent();
-	std::string getConnection();
-	std::string getVersion();
+	std::string getMethod() const;
+	std::string getHost() const;
+	std::string getPath() const;
+	std::string getQueryString() const;
+	std::string getBody() const;
+	std::string getContentType() const;
+	std::string getUserAgent() const;
+	std::string getConnection() const;
+	std::string getVersion() const;
 	int			getContentLength() const;
 };
 
