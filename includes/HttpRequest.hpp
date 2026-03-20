@@ -14,7 +14,8 @@ private:
 	std::string _contentType;
 	std::string _userAgent;
 	std::string _connection;
-	int         _contentLength{};
+	std::string _version;
+	int         _contentLength;
 
 public:
 	HttpRequest();
@@ -31,6 +32,7 @@ public:
 	void		setUserAgent(const std::string& userAgent);
 	void		setConnection(const std::string& connection);
 	void		setContentLength(int contentLength);
+	void		setVersion(std::string& version);
 
 	std::string getMethod();
 	std::string getHost();
@@ -40,6 +42,7 @@ public:
 	std::string getContentType();
 	std::string getUserAgent();
 	std::string getConnection();
+	std::string getVersion();
 	int			getContentLength() const;
 };
 

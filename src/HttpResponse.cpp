@@ -53,6 +53,12 @@ void HttpResponse::setBody(const std::string& body)
 	_body = body;
 }
 
+void HttpResponse::setVersion(const std::string& version)
+{
+	_version = version;
+}
+
+
 void HttpResponse::setContentLength(int contentLength)
 {
 	_contentLength = contentLength;
@@ -82,6 +88,12 @@ std::string HttpResponse::getBody()
 {
 	return _body;
 }
+
+std::string HttpResponse::getVersion()
+{
+	return _version;
+}
+
 
 int HttpResponse::getContentLength() const
 {

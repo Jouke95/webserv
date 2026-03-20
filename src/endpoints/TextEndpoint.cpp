@@ -18,6 +18,11 @@ HttpResponse TextEndpoint::handle()
 		handleDelete();
 	}
 
+	if (_response.getStatusCode() == 0)
+	{
+		_response.setStatusCode(200);
+		_response.setStatusMessage("OK");
+	}
 	return _response;
 }
 
