@@ -2,8 +2,8 @@
 #define SERVER_HPP
 
 #include <iostream>
-#include <vector>
 #include <poll.h>
+#include <vector>
 #include "Client.hpp"
 
 #define PORT 8080
@@ -23,7 +23,7 @@ class Server {
 
 		// Methods
 		void myPoll();
-		void addConnection(std::vector<Connection>& connections);
+		void addConnection();
 		bool handleRequest(Connection &conn);
 		void sendResponse(Connection &conn);
 

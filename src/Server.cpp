@@ -8,12 +8,9 @@
 #include <sys/socket.h>
 #include <Parser.hpp>
 
-#include "endpoints/CommonGatewayInterface.hpp"
-
 Server::Server() : _serverFileDescriptor(-1) {}
 
-Server::~Server()
-= default;
+Server::~Server() {}
 
 int Server::start()
 {
@@ -62,7 +59,7 @@ int Server::run()
 		for (size_t i = 0; i < _connections.size(); i++) {
 			if (_connections[i].pfd.revents & POLLIN) {
 				if (_connections[i].isServer)
-					addConnection(_connections);
+					addConnection();
 				else {
 					if (handleRequest(_connections[i]) == false) {
 						_connections.erase(_connections.begin() + i);
@@ -82,16 +79,12 @@ int Server::run()
 bool Server::handleRequest(Connection &conn) {
 	char buf[BUFFER_SIZE] = {};
 	int bytesRead = read(conn.pfd.fd, buf, BUFFER_SIZE - 1);
-	std::cout << "Dit is de request:\n\n";
-	std::cout << buf << std::endl;
 	if (bytesRead <= 0) {
 		close(conn.pfd.fd);
 		return false;
 	}
 	Parser parser(buf);
 	conn.client._response = parser.buildResponseString();
-	std::cout << "dit is de response: \n\n\n";
-	std::cout << conn.client._response << std::endl;
 	conn.pfd.events = POLLIN | POLLOUT;
 	return true;
 }
@@ -113,19 +106,19 @@ void Server::myPoll() {
 		_connections[i].pfd.revents = fds[i].revents;
 }
 
-void Server::addConnection(std::vector<Connection>& connections) {
-	int _clientFileDescriptor = accept(_serverFileDescriptor, nullptr, nullptr);
+void Server::addConnection() {
+	int clientFD = accept(_serverFileDescriptor, nullptr, nullptr);
 	std::cout << "Connection made.\n\n";
 
 	Connection newClient;
 
-	newClient.pfd.fd = _clientFileDescriptor;
+	newClient.pfd.fd = clientFD;
 	newClient.pfd.events = POLLIN;
 	newClient.pfd.revents = 0;
 	newClient.client._response = "";
 	newClient.isServer = false;
 
-	connections.push_back(newClient);
+	_connections.push_back(newClient);
 }
 
 
