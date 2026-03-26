@@ -1,4 +1,5 @@
 #include "Parser.hpp"
+#include "endpoints/CommonGatewayInterface.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -7,6 +8,18 @@
 Parser::Parser(const std::string& request)
 {
 	_requestString = request;
+
+	buildRequest();
+	HttpRequest httpRequest = getRequest();
+	HttpResponse httpResponse = getResponse();
+
+	std::cout << "Request Method: " << httpRequest.getMethod() << std::endl;
+	CommonGatewayInterface CGI(httpRequest, httpResponse);
+
+	httpResponse = CGI.Redirect();
+		
+	std::cout << "Response: " << httpResponse.getStatusMessage() << std::endl;
+	setResponse(httpResponse);
 }
 
 Parser::~Parser()
