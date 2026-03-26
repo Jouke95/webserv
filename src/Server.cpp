@@ -82,12 +82,15 @@ int Server::run()
 bool Server::handleRequest(Connection &conn) {
 	char buf[BUFFER_SIZE] = {};
 	int bytesRead = read(conn.pfd.fd, buf, BUFFER_SIZE - 1);
+	std::cout << "Dit is de request:\n\n";
+	std::cout << buf << std::endl;
 	if (bytesRead <= 0) {
 		close(conn.pfd.fd);
 		return false;
 	}
 	Parser parser(buf);
 	conn.client._response = parser.buildResponseString();
+	std::cout << "dit is de response: \n\n\n";
 	std::cout << conn.client._response << std::endl;
 	conn.pfd.events = POLLIN | POLLOUT;
 	return true;

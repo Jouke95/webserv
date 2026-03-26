@@ -8,5 +8,5 @@ int main()
     result = server.start();
     if (result != 0)
         exit(result);
-    server.waitForRequest();
+    server.run();
 }
