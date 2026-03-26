@@ -7,12 +7,12 @@ HttpResponse TextEndpoint::handle()
 	{
 		handlePost();
 	}
-	
+
 	if (_request.getMethod() == "GET")
 	{
 		handleGet();
 	}
-	
+
 	if (_request.getMethod() == "DELETE")
 	{
 		handleDelete();
@@ -80,5 +80,3 @@ int TextEndpoint::handlePost()
 	_response.setContentType("text/html");
 	return 0;
 }
-
-
