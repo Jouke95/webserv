@@ -22,7 +22,7 @@ public:
 	~HttpRequest();
 	HttpRequest(const HttpRequest& other);
 	HttpRequest& operator=(const HttpRequest& other);
-	
+
 	void		setMethod(const std::string& method);
 	void		setHost(const std::string& host);
 	void		setPath(const std::string& path);
