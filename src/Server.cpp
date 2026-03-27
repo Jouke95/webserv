@@ -1,96 +1,165 @@
-#include <vector>
-#include <poll.h>
-#include <cstdio>
-#include <iostream>
-#include <Server.hpp>
-#include <unistd.h>
+#include <fcntl.h>
 #include <netinet/in.h>
+#include <stdexcept>
 #include <sys/socket.h>
-#include <Parser.hpp>
+#include <unistd.h>
+#include "Server.hpp"
+#include "Parser.hpp"
 
 Server::Server() : _serverFileDescriptor(-1) {}
 
 Server::~Server() {}
 
-int Server::start()
+void Server::start()
 {
 	_serverFileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
+	if (_serverFileDescriptor < 0)
+		throw std::runtime_error("socket() failed");
+	fcntl(_serverFileDescriptor, F_SETFL, O_NONBLOCK);
 
-	if (_serverFileDescriptor < 0) {
-		perror("socket");
-		return 1;
-	}
-	
 	int opt = 1;
 	setsockopt(_serverFileDescriptor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	
-	sockaddr_in addr{};
-	addr.sin_family      = AF_INET;
-	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port        = htons(PORT);
-	
-	if (bind(_serverFileDescriptor, (sockaddr*)&addr, sizeof(addr)) < 0) {
-		perror("bind");
-		return 1;
-	}
 
-	if (listen(_serverFileDescriptor, 10) < 0) {
-		perror("listen");
-		return 1;
-	}
+	sockaddr_in addr{};
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = INADDR_ANY;
+	addr.sin_port = htons(PORT);
+
+	if (bind(_serverFileDescriptor, (sockaddr*)&addr, sizeof(addr)) < 0)
+		throw std::runtime_error("bind() failed");
+
+	if (listen(_serverFileDescriptor, 10) < 0)
+		throw std::runtime_error("listen() failed");
+
 	std::cout << "Server up, listening at 127.0.0.1:" << PORT << std::endl;
-	return 0;
 }
 
-int Server::run()
+void Server::run()
 {
-	Connection serverConn;
-	serverConn.pfd.fd = _serverFileDescriptor;
-	serverConn.pfd.events = POLLIN;
-	serverConn.pfd.revents = 0;
-	serverConn.isServer = true;
-
-	_connections.push_back(serverConn);
+	_connections.push_back(createConnection(_serverFileDescriptor, true));
 
 	while (true) {
-
 		myPoll();
-
-		for (size_t i = 0; i < _connections.size(); i++) {
-			if (_connections[i].pfd.revents & POLLIN) {
-				if (_connections[i].isServer)
-					addConnection();
-				else {
-					if (handleRequest(_connections[i]) == false) {
-						_connections.erase(_connections.begin() + i);
-						i--;
-					}
-				}
-			}
-			else if (_connections[i].pfd.revents & POLLOUT) {
-				sendResponse(_connections[i]);
-				_connections.erase(_connections.begin() + i);
-				i--;
-			}
-		}
+		for (size_t i = 0; i < _connections.size(); i++)
+			handleConnection(i);
 	}
 }
 
-bool Server::handleRequest(Connection &conn) {
+void Server::handleConnection(size_t &i)
+{
+	Connection &conn = _connections[i];
+
+	if (isTimedOut(conn)) {
+		removeConnection(i);
+		return;
+	}
+	if (isReadable(conn)) {
+		if (conn.isServer)
+			addConnection();
+		else if (!handleRequest(conn))
+			removeConnection(i);
+	}
+	else if (isWritable(conn)) {
+		sendResponse(conn);
+		removeConnection(i);
+	}
+}
+
+bool Server::isTimedOut(Connection& conn) {
+	return (!conn.isServer && time(NULL) - conn.timestamp > TIMEOUT);
+}
+
+bool Server::isReadable(Connection& conn) {
+	return conn.pfd.revents & POLLIN;
+}
+
+bool Server::isWritable(Connection& conn) {
+	return conn.pfd.revents & POLLOUT;
+}
+
+void Server::removeConnection(size_t &i) {
+	close(_connections[i].pfd.fd);
+	_connections.erase(_connections.begin() + i);
+	i--;
+}
+
+void Server::addConnection() {
+	int clientFD = acceptClient();
+	if (clientFD < 0)
+		return;
+	_connections.push_back(createConnection(clientFD, false));
+}
+
+int Server::acceptClient() {
+	int clientFD = accept(_serverFileDescriptor, nullptr, nullptr);
+	if (clientFD < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+			return -1;
+		throw std::runtime_error("accept() failed");
+	}
+	std::cout << "Connection made.\n\n";
+	fcntl(clientFD, F_SETFL, O_NONBLOCK);
+	return clientFD;
+}
+
+Server::Connection Server::createConnection(int fd, bool isServer) {
+	Connection conn;
+	conn.pfd.fd = fd;
+	conn.pfd.events = POLLIN;
+	conn.pfd.revents = 0;
+	conn.timestamp = time(NULL);
+	conn.isServer = isServer;
+	return conn;
+}
+
+bool Server::handleRequest(Connection& conn) {
+	if (!readFromClient(conn))
+		return false;
+	if (!isCompleteRequest(conn))
+		return true;
+	buildResponse(conn);
+	return true;
+}
+
+bool Server::readFromClient(Connection& conn) {
 	char buf[BUFFER_SIZE] = {};
 	int bytesRead = read(conn.pfd.fd, buf, BUFFER_SIZE - 1);
+	if (bytesRead < 0 && errno == EAGAIN)
+		return true;
 	if (bytesRead <= 0) {
 		close(conn.pfd.fd);
 		return false;
 	}
-	Parser parser(buf);
-	conn.client._response = parser.buildResponseString();
-	conn.pfd.events = POLLIN | POLLOUT;
+	conn.client._requestBuffer += buf;
 	return true;
 }
 
+bool Server::isCompleteRequest(Connection& conn) {
+	std::string& buffer = conn.client._requestBuffer;
+
+	size_t headerEnd = buffer.find("\r\n\r\n");
+	if (headerEnd == std::string::npos)
+		return false;
+
+	size_t pos = buffer.find("Content-Length");
+	if (pos != std::string::npos) {
+		pos += CONTENT_LENGTH_PREFIX;
+		size_t contentLength = stoi(buffer.substr(pos));
+		if (buffer.size() - (headerEnd + HEADER_END_LEN) < contentLength)
+			return false;
+	}
+	return true;
+}
+
+void Server::buildResponse(Connection& conn) {
+	Parser parser(conn.client._requestBuffer);
+	conn.client._response = parser.buildResponseString();
+	conn.pfd.events = POLLIN | POLLOUT;
+}
+
 void Server::sendResponse(Connection &conn) {
-	write(conn.pfd.fd, conn.client._response.c_str(), conn.client._response.size());
+	const std::string& response = conn.client._response;
+	write(conn.pfd.fd, response.c_str(), response.size());
 	close(conn.pfd.fd);
 }
 
@@ -105,37 +174,3 @@ void Server::myPoll() {
 	for (size_t i = 0; i < _connections.size(); i++)
 		_connections[i].pfd.revents = fds[i].revents;
 }
-
-void Server::addConnection() {
-	int clientFD = accept(_serverFileDescriptor, nullptr, nullptr);
-	std::cout << "Connection made.\n\n";
-
-	Connection newClient;
-
-	newClient.pfd.fd = clientFD;
-	newClient.pfd.events = POLLIN;
-	newClient.pfd.revents = 0;
-	newClient.client._response = "";
-	newClient.isServer = false;
-
-	_connections.push_back(newClient);
-}
-
-
-
-
-
-
-
-
-// int poll(struct pollfd *fds, nfds_t nfds, int timeout);
-
-// struct pollfd {
-// 	int   fd;			// welke file descriptor?
-// 	short events;		// wat wil IK monitoren?
-// 	short revents;		// wat meldt het OS terug?
-// };
-
-// fds[0].fd		= listening_fd;		// de fd van socket()
-// fds[0].events	= POLLIN;			// ik wil weten als er iets te lezen is
-// fds[0].revents	= 0;				// dit vult het OS in, jij zet het op 0
