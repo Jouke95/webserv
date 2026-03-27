@@ -7,7 +7,7 @@ Config::Config(const std::string& path){
 	std::ifstream confFile(path);
 
 	if (!confFile.is_open())
-		throw....
+		throw
 
 	while (std::getline(confFile, content)){
 		std::cout << content;
