@@ -33,6 +33,10 @@ struct ServerConfig {
 class Config {
 private:
 	std::vector<ServerConfig>	_servers;
+
+	void parseServerBlock(std::ifstream& file, ServerConfig& server);
+	void parseLocationBlock(std::ifstream& file, LocationConfig& location);
+
 public:
 	Config(const std::string& path);
 	Config(const Config& other);
