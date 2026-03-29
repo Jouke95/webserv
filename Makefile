@@ -4,7 +4,8 @@ CC = c++
 CFLAGS = -Wall -Wextra -Werror -Iincludes
 
 SRCS = src/main.cpp src/Parser.cpp src/Server.cpp src/HttpRequest.cpp src/HttpResponse.cpp \
-src/endpoints/CommonGatewayInterface.cpp src/endpoints/AEndpoint.cpp src/endpoints/TextEndpoint.cpp src/Client.cpp
+src/endpoints/CommonGatewayInterface.cpp src/endpoints/AEndpoint.cpp src/endpoints/TextEndpoint.cpp src/Client.cpp \
+src/Config.cpp
 
 OBJ_DIR = obj
 
@@ -15,7 +16,7 @@ all: $(NAME)
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
-$(OBJ_DIR)/%.o: %.c
+$(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
