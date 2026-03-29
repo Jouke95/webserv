@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-int main()
+int main(int ac, char **av)
 {
 	try
 	{

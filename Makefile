@@ -8,7 +8,7 @@ src/endpoints/CommonGatewayInterface.cpp src/endpoints/AEndpoint.cpp src/endpoin
 
 OBJ_DIR = obj
 
-OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
+OBJS = $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 all: $(NAME)
 
