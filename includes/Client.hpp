@@ -5,12 +5,13 @@
 
 class Client {
 	private:
-	
+
 	public:
 		Client();
 		~Client();
 
 		std::string _response;
+		std::string _requestBuffer;
 };
 
 

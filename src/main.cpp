@@ -2,11 +2,17 @@
 
 int main(int ac, char **av)
 {
-    Server  server;
-    int     result;
+	try
+	{
+		Server  server;
 
-    result = server.start();
-    if (result != 0)
-        exit(result);
-    server.run();
+		server.start();
+		server.run();
+	}
+	catch (const std::exception& e)
+	{
+		std::cerr << "Fatal error: " << e.what() << "\n";
+		return 1;
+	}
+	return 0;
 }
