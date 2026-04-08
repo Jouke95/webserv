@@ -11,7 +11,7 @@ class Client {
 		~Client();
 
 		std::string _response;
-		std::string _requestBuffer;
+		std::string _request;
 };
 
 

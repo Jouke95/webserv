@@ -131,35 +131,34 @@ bool Server::handleRequest(Connection& conn) {
 }
 
 bool Server::readFromClient(Connection& conn) {
-	char buf[BUFFER_SIZE] = {};
-	int bytesRead = read(conn.pfd.fd, buf, BUFFER_SIZE - 1);
-	if (bytesRead <= 0) {
-		close(conn.pfd.fd);
+	char buffer[BUFFER_SIZE] = {};
+	int bytesRead = read(conn.pfd.fd, buffer, BUFFER_SIZE - 1);
+	if (bytesRead <= 0)
 		return false;
-	}
-	conn.client._requestBuffer += buf;
+
+	conn.client._request += buffer;
 	return true;
 }
 
 bool Server::isCompleteRequest(Connection& conn) {
-	std::string& buffer = conn.client._requestBuffer;
+	std::string& request = conn.client._request;
 
-	size_t headerEnd = buffer.find("\r\n\r\n");
+	size_t headerEnd = request.find("\r\n\r\n");
 	if (headerEnd == std::string::npos)
 		return false;
 
-	size_t pos = buffer.find("Content-Length");
+	size_t pos = request.find("Content-Length");
 	if (pos != std::string::npos) {
 		pos += CONTENT_LENGTH_PREFIX;
-		size_t contentLength = stoi(buffer.substr(pos));
-		if (buffer.size() - (headerEnd + HEADER_END_LEN) < contentLength)
+		size_t contentLength = stoi(request.substr(pos));
+		if (request.size() - (headerEnd + HEADER_END_LEN) < contentLength)
 			return false;
 	}
 	return true;
 }
 
 void Server::buildResponse(Connection& conn) {
-	Parser parser(conn.client._requestBuffer);
+	Parser parser(conn.client._request);
 	conn.client._response = parser.buildResponseString();
 	conn.pfd.events = POLLIN | POLLOUT;
 }
