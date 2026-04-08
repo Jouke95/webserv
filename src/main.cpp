@@ -9,7 +9,7 @@ int main(int ac, char **av)
 		if (ac != 2)
 			throw std::runtime_error("Usage: ./webserv [config file]");
 		Config config(av[1]);
-		Server  server;
+		Server server(config);
 
 		server.start();
 		server.run();

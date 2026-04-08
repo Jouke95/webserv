@@ -1,43 +1,52 @@
 #include <fcntl.h>
-#include <netinet/in.h>
 #include <stdexcept>
 #include <sys/socket.h>
 #include <unistd.h>
 #include "Server.hpp"
 #include "Parser.hpp"
 
-Server::Server() : _serverFileDescriptor(-1) {}
+Server::Server(const Config& config) : _config(config) {}
 
 Server::~Server() {}
 
 void Server::start()
 {
-	_serverFileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
-	if (_serverFileDescriptor < 0)
-		throw std::runtime_error("socket() failed");
-	fcntl(_serverFileDescriptor, F_SETFL, O_NONBLOCK);
+	for (size_t i = 0; i < _config.GetServer().size(); i++) {
 
-	int opt = 1;
-	setsockopt(_serverFileDescriptor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		const ServerConfig& server = _config.GetServer()[i];
 
+		int serverFD = socket(AF_INET, SOCK_STREAM, 0);
+		if (serverFD < 0)
+			throw std::runtime_error("socket() failed");
+		fcntl(serverFD, F_SETFL, O_NONBLOCK);
+		int opt = 1;
+		setsockopt(serverFD, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+		sockaddr_in addr = createAddress(server);
+
+		if (bind(serverFD, (sockaddr*)&addr, sizeof(addr)) < 0)
+			throw std::runtime_error("bind() failed");
+
+		if (listen(serverFD, 10) < 0)
+			throw std::runtime_error("listen() failed");
+
+		std::cout << "Server up, listening at " << server.host << ":" << server.port << std::endl;
+
+		_connections.push_back(createConnection(serverFD, true));
+	}
+}
+
+sockaddr_in Server::createAddress(const ServerConfig& server) {
 	sockaddr_in addr{};
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(PORT);
+	addr.sin_port = htons(server.port);
 
-	if (bind(_serverFileDescriptor, (sockaddr*)&addr, sizeof(addr)) < 0)
-		throw std::runtime_error("bind() failed");
-
-	if (listen(_serverFileDescriptor, 10) < 0)
-		throw std::runtime_error("listen() failed");
-
-	std::cout << "Server up, listening at 127.0.0.1:" << PORT << std::endl;
+	return addr;
 }
 
 void Server::run()
 {
-	_connections.push_back(createConnection(_serverFileDescriptor, true));
-
 	while (true) {
 		myPoll();
 		for (size_t i = 0; i < _connections.size(); i++)
@@ -55,7 +64,7 @@ void Server::handleConnection(size_t &i)
 	}
 	if (isReadable(conn)) {
 		if (conn.isServer)
-			addConnection();
+			addConnection(conn.pfd.fd);
 		else if (!handleRequest(conn))
 			removeConnection(i);
 	}
@@ -83,15 +92,15 @@ void Server::removeConnection(size_t &i) {
 	i--;
 }
 
-void Server::addConnection() {
-	int clientFD = acceptClient();
+void Server::addConnection(int serverFD) {
+	int clientFD = acceptClient(serverFD);
 	if (clientFD < 0)
 		return;
 	_connections.push_back(createConnection(clientFD, false));
 }
 
-int Server::acceptClient() {
-	int clientFD = accept(_serverFileDescriptor, nullptr, nullptr);
+int Server::acceptClient(int serverFD) {
+	int clientFD = accept(serverFD, nullptr, nullptr);
 	if (clientFD < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 			return -1;
@@ -124,8 +133,6 @@ bool Server::handleRequest(Connection& conn) {
 bool Server::readFromClient(Connection& conn) {
 	char buf[BUFFER_SIZE] = {};
 	int bytesRead = read(conn.pfd.fd, buf, BUFFER_SIZE - 1);
-	if (bytesRead < 0 && errno == EAGAIN)
-		return true;
 	if (bytesRead <= 0) {
 		close(conn.pfd.fd);
 		return false;

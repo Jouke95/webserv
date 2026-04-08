@@ -3,11 +3,11 @@
 
 #include <ctime>
 #include <iostream>
+#include <netinet/in.h>
 #include <poll.h>
 #include <vector>
 #include "Client.hpp"
-
-#define PORT 8080
+#include "Config.hpp"
 
 class Server {
 	private:
@@ -22,35 +22,37 @@ class Server {
 			time_t timestamp;
 			bool isServer;
 		};
-	
-		int	_serverFileDescriptor;
+
 		std::vector<Connection> _connections;
+		Config _config;
 
 		// Methods
-		void myPoll();
-		void handleConnection(size_t &i);
-		bool isTimedOut(Connection& conn);
-		bool isReadable(Connection& conn);
-		bool isWritable(Connection& conn);
-		void removeConnection(size_t &i);
-		void addConnection();
-		int acceptClient();
-		Connection createConnection(int fd, bool isServer);
-		bool handleRequest(Connection& conn);
-		void sendResponse(Connection& conn);
-		bool isCompleteRequest(Connection& conn);
-		bool readFromClient(Connection& conn);
-		void buildResponse(Connection& conn);
+		void		myPoll();
+		sockaddr_in	createAddress(const ServerConfig& server);
+		void		handleConnection(size_t &i);
+		bool		isTimedOut(Connection& conn);
+		bool		isReadable(Connection& conn);
+		bool		isWritable(Connection& conn);
+		void		removeConnection(size_t &i);
+		void		addConnection(int serverFD);
+		int			acceptClient(int serverFD);
+		Connection	createConnection(int fd, bool isServer);
+		bool		handleRequest(Connection& conn);
+		void		sendResponse(Connection& conn);
+		bool		isCompleteRequest(Connection& conn);
+		bool		readFromClient(Connection& conn);
+		void		buildResponse(Connection& conn);
 
 	public:
-		Server();
+		Server() = delete;
+		Server(const Config& config);
 		~Server();
 		Server(const Server& other) = delete;
 		Server& operator=(const Server& other) = delete;
 
 		// Methods
-		void start();
-		void run();
+		void	start();
+		void	run();
 };
 
 #endif
