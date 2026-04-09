@@ -22,7 +22,7 @@ class Server {
 			time_t timestamp;
 			bool isServer;
 		};
-	
+
 		int	_serverFileDescriptor;
 		std::vector<Connection> _connections;
 
