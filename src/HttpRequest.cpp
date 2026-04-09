@@ -24,7 +24,6 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 		_host = other._host;
 		_method = other._method;
 		_path = other._path;
-		_queryString = other._queryString;
 		_userAgent = other._userAgent;
 	}
 	return (*this);
@@ -44,11 +43,6 @@ void HttpRequest::setHost(const std::string& host)
 void HttpRequest::setPath(const std::string& path)
 {
 	_path = path;
-}
-
-void HttpRequest::setQueryString(const std::string& query)
-{
-	_queryString = query;
 }
 
 void HttpRequest::setBody(const std::string& body)
@@ -97,11 +91,6 @@ std::string HttpRequest::getPath() const
 	return _path;
 }
 
-std::string HttpRequest::getQueryString() const
-{
-	return _queryString;
-}
-
 std::string HttpRequest::getBody() const
 {
 	return _body;
@@ -126,7 +115,6 @@ std::string HttpRequest::getVersion() const
 {
 	return _version;
 }
-
 
 int HttpRequest::getContentLength() const
 {

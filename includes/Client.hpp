@@ -12,6 +12,7 @@ class Client {
 
 		std::string _response;
 		std::string _request;
+		ssize_t bytesSent;
 };
 
 

@@ -1,5 +1,5 @@
 #include "Client.hpp"
 
-Client::Client() {}
+Client::Client() : bytesSent(0) {}
 
 Client::~Client() {}

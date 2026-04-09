@@ -38,10 +38,9 @@ class Server {
 		int			acceptClient(int serverFD);
 		Connection	createConnection(int fd, bool isServer);
 		bool		handleRequest(Connection& conn);
-		void		sendResponse(Connection& conn);
+		bool		sendResponse(Connection& conn);
 		bool		isCompleteRequest(Connection& conn);
 		bool		readFromClient(Connection& conn);
-		void		buildResponse(Connection& conn);
 
 	public:
 		Server() = delete;

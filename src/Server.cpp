@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include "Server.hpp"
-#include "Parser.hpp"
+#include "RequestParser.hpp"
 
 Server::Server(const Config& config) : _config(config) {}
 
@@ -69,8 +69,9 @@ void Server::handleConnection(size_t &i)
 			removeConnection(i);
 	}
 	else if (isWritable(conn)) {
-		sendResponse(conn);
-		removeConnection(i);
+		bool done = sendResponse(conn);
+		if (done)
+			removeConnection(i);
 	}
 }
 
@@ -126,7 +127,15 @@ bool Server::handleRequest(Connection& conn) {
 		return false;
 	if (!isCompleteRequest(conn))
 		return true;
-	buildResponse(conn);
+
+	RequestParser parser(conn.client._request);
+
+	const LocationConfig& location = findLocation(parser.getRequest().getPath());
+	ResponseBuilder builder(parser.getRequest(), location);
+
+	conn.client._response = builder.build();
+	conn.pfd.events = POLLIN | POLLOUT;
+
 	return true;
 }
 
@@ -141,32 +150,35 @@ bool Server::readFromClient(Connection& conn) {
 }
 
 bool Server::isCompleteRequest(Connection& conn) {
-	std::string& request = conn.client._request;
+	std::string& RequestParser = conn.client._request;
 
-	size_t headerEnd = request.find("\r\n\r\n");
+	size_t headerEnd = RequestParser.find("\r\n\r\n");
 	if (headerEnd == std::string::npos)
 		return false;
 
-	size_t pos = request.find("Content-Length");
+	size_t pos = RequestParser.find("Content-Length");
 	if (pos != std::string::npos) {
 		pos += CONTENT_LENGTH_PREFIX;
-		size_t contentLength = stoi(request.substr(pos));
-		if (request.size() - (headerEnd + HEADER_END_LEN) < contentLength)
+		size_t contentLength = stoi(RequestParser.substr(pos));
+		if (RequestParser.size() - (headerEnd + HEADER_END_LEN) < contentLength)
 			return false;
 	}
 	return true;
 }
 
-void Server::buildResponse(Connection& conn) {
-	Parser parser(conn.client._request);
-	conn.client._response = parser.buildResponseString();
-	conn.pfd.events = POLLIN | POLLOUT;
-}
-
-void Server::sendResponse(Connection &conn) {
+bool Server::sendResponse(Connection &conn) {
 	const std::string& response = conn.client._response;
-	write(conn.pfd.fd, response.c_str(), response.size());
-	close(conn.pfd.fd);
+	ssize_t& bytesSent = conn.client.bytesSent;
+
+	ssize_t bytes = write(conn.pfd.fd, response.c_str() + bytesSent, response.size() - bytesSent);
+	if (bytes == -1)
+		return true;
+
+	bytesSent += bytes;
+	if (bytesSent < (ssize_t)response.size())
+		return false;
+
+	return true;
 }
 
 void Server::myPoll() {
