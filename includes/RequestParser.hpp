@@ -18,8 +18,6 @@ class RequestParser {
 		RequestParser(const RequestParser& other) = delete;
 		RequestParser& operator=(const RequestParser& other) = delete;
 
-		// Methods
-
 		HttpRequest getRequest() const;
 };
 

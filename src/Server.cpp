@@ -131,8 +131,8 @@ bool Server::handleRequest(Connection& conn) {
 	RequestParser parser(conn.client._request);
 
 	const LocationConfig& location = findLocation(parser.getRequest().getPath());
-	ResponseBuilder builder(parser.getRequest(), location);
 
+	ResponseBuilder builder(parser.getRequest(), location);
 	conn.client._response = builder.build();
 	conn.pfd.events = POLLIN | POLLOUT;
 

@@ -19,13 +19,12 @@ void RequestParser::parse() {
 		std::string method, path, version;
 
 		requestLine >> method >> path >> version;
-		// std::cout << " PATH: " << path << std::endl;
 
 		_httpRequest.setMethod(method);
 		_httpRequest.setPath(path);
-		// std::cout << _httpRequest.getPath() << std::endl;
 		_httpRequest.setVersion(version);
 	}
+
 	// Headers
 	while (std::getline(stream, line))
 	{
@@ -47,6 +46,7 @@ void RequestParser::parse() {
 		else if (key == "Connection")     _httpRequest.setConnection(value);
 	}
 
+	// Body
 	std::string body;
 	std::getline(stream, body, '\0');
 	if (!body.empty() && body.back() == '\r')

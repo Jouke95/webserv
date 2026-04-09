@@ -22,24 +22,24 @@ class HttpRequest {
 		HttpRequest& operator=(const HttpRequest& other);
 
 		void		setMethod(const std::string& method);
-		void		setHost(const std::string& host);
 		void		setPath(const std::string& path);
-		void		setBody(const std::string& body);
+		void		setVersion(std::string& version);
+		void		setHost(const std::string& host);
 		void		setContentType(const std::string& contentType);
+		void		setContentLength(int contentLength);
 		void		setUserAgent(const std::string& userAgent);
 		void		setConnection(const std::string& connection);
-		void		setContentLength(int contentLength);
-		void		setVersion(std::string& version);
+		void		setBody(const std::string& body);
 
 		std::string	getMethod() const;
-		std::string	getHost() const;
 		std::string	getPath() const;
-		std::string	getBody() const;
+		std::string	getHost() const;
 		std::string	getContentType() const;
-		std::string	getUserAgent() const;
-		std::string	getConnection() const;
 		std::string	getVersion() const;
 		int			getContentLength() const;
+		std::string	getUserAgent() const;
+		std::string	getConnection() const;
+		std::string	getBody() const;
 };
 
 #endif
