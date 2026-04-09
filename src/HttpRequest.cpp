@@ -1,20 +1,16 @@
 
 #include <HttpRequest.hpp>
 
-HttpRequest::HttpRequest() : _contentLength(0)
-{
-}
+HttpRequest::HttpRequest() : _contentLength(0) {}
 
 HttpRequest::~HttpRequest()
 = default;
 
-HttpRequest::HttpRequest(const HttpRequest& other)
-{
+HttpRequest::HttpRequest(const HttpRequest& other) {
 	*this = other;
 }
 
-HttpRequest& HttpRequest::operator=(const HttpRequest& other)
-{
+HttpRequest& HttpRequest::operator=(const HttpRequest& other) {
 	if (this != &other)
 	{
 		_body = other._body;
@@ -30,93 +26,75 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other)
 }
 
 
-void HttpRequest::setMethod(const std::string& method)
-{
+void HttpRequest::setMethod(const std::string& method) {
 	_method = method;
 }
 
-void HttpRequest::setHost(const std::string& host)
-{
+void HttpRequest::setHost(const std::string& host) {
 	_host = host;
 }
 
-void HttpRequest::setPath(const std::string& path)
-{
+void HttpRequest::setPath(const std::string& path) {
 	_path = path;
 }
 
-void HttpRequest::setBody(const std::string& body)
-{
+void HttpRequest::setBody(const std::string& body) {
 	_body = body;
 }
 
-void HttpRequest::setContentType(const std::string& contentType)
-{
+void HttpRequest::setContentType(const std::string& contentType) {
 	_contentType = contentType;
 }
 
-void HttpRequest::setUserAgent(const std::string& userAgent)
-{
+void HttpRequest::setUserAgent(const std::string& userAgent) {
 	_userAgent = userAgent;
 }
 
-void HttpRequest::setConnection(const std::string& connection)
-{
+void HttpRequest::setConnection(const std::string& connection) {
 	_connection = connection;
 }
 
-void HttpRequest::setContentLength(int contentLength)
-{
+void HttpRequest::setContentLength(int contentLength) {
 	_contentLength = contentLength;
 }
 
-void HttpRequest::setVersion(std::string& version)
-{
+void HttpRequest::setVersion(std::string& version) {
 	_version = version;
 }
 
 
-std::string HttpRequest::getMethod() const
-{
+std::string HttpRequest::getMethod() const {
 	return _method;
 }
 
-std::string HttpRequest::getHost() const
-{
+std::string HttpRequest::getHost() const {
 	return _host;
 }
 
-std::string HttpRequest::getPath() const
-{
+std::string HttpRequest::getPath() const {
 	return _path;
 }
 
-std::string HttpRequest::getBody() const
-{
+std::string HttpRequest::getBody() const {
 	return _body;
 }
 
-std::string HttpRequest::getContentType()  const
-{
+std::string HttpRequest::getContentType()  const {
 	return _contentType;
 }
 
-std::string HttpRequest::getUserAgent() const
-{
+std::string HttpRequest::getUserAgent() const {
 	return _userAgent;
 }
 
-std::string HttpRequest::getConnection() const
-{
+std::string HttpRequest::getConnection() const {
 	return _connection;
 }
 
-std::string HttpRequest::getVersion() const
-{
+std::string HttpRequest::getVersion() const {
 	return _version;
 }
 
-int HttpRequest::getContentLength() const
-{
+int HttpRequest::getContentLength() const {
 	return _contentLength;
 }
