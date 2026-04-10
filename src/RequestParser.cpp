@@ -32,26 +32,35 @@ void RequestParser::parse() {
 			line.pop_back();
 		if (line.empty())
 			break;
-		
+
 		size_t colonPos = line.find(':');
 		if (colonPos == std::string::npos)
 			continue;
 
 		std::string key   = line.substr(0, colonPos);
 		std::string value = line.substr(colonPos + 2);
-		if      (key == "Host")           _httpRequest.setHost(value);
-		else if (key == "Content-Type")   _httpRequest.setContentType(value);
-		else if (key == "Content-Length") _httpRequest.setContentLength(std::stoi(value));
-		else if (key == "User-Agent")     _httpRequest.setUserAgent(value);
-		else if (key == "Connection")     _httpRequest.setConnection(value);
+		if (key == "Host") {
+			size_t hostColon = value.find(':');
+			std::string host = value.substr(0, hostColon);
+			int port = stoi(value.substr(hostColon + 1));
+			if (host == "localhost")
+				host = "127.0.0.1";
+			_httpRequest.setHost(host);
+			_httpRequest.setPort(port);
+		}
+		else if (key == "Content-Type")		_httpRequest.setContentType(value);
+		else if (key == "Content-Length")	_httpRequest.setContentLength(std::stoi(value));
+		else if (key == "User-Agent")		_httpRequest.setUserAgent(value);
+		else if (key == "Connection")		_httpRequest.setConnection(value);
 	}
 
 	// Body
-	std::string body;
-	std::getline(stream, body, '\0');
-	if (!body.empty() && body.back() == '\r')
-		body.pop_back();
-	_httpRequest.setBody(body);
+	size_t headerEnd = _requestString.find("\r\n\r\n");
+	if (headerEnd != std::string::npos)
+	{
+		std::string body = _requestString.substr(headerEnd + 4);
+		_httpRequest.setBody(body);
+	}
 }
 
 HttpRequest RequestParser::getRequest() const {

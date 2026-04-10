@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include "Server.hpp"
 #include "RequestParser.hpp"
+#include "ResponseBuilder.hpp"
 
 Server::Server(const Config& config) : _config(config) {}
 
@@ -130,11 +131,14 @@ bool Server::handleRequest(Connection& conn) {
 
 	RequestParser parser(conn.client._request);
 
-	const LocationConfig& location = findLocation(parser.getRequest().getPath());
+	const LocationConfig& location = findLocation(parser.getRequest());
+	std::cout << location.path << std::endl;
+
 
 	ResponseBuilder builder(parser.getRequest(), location);
-	conn.client._response = builder.build();
-	conn.pfd.events = POLLIN | POLLOUT;
+
+	// conn.client._response = builder.build();
+	// conn.pfd.events = POLLIN | POLLOUT;
 
 	return true;
 }
@@ -145,7 +149,7 @@ bool Server::readFromClient(Connection& conn) {
 	if (bytesRead <= 0)
 		return false;
 
-	conn.client._request += buffer;
+	conn.client._request.append(buffer, bytesRead);
 	return true;
 }
 
@@ -164,6 +168,33 @@ bool Server::isCompleteRequest(Connection& conn) {
 			return false;
 	}
 	return true;
+}
+
+const LocationConfig& Server::findLocation(const HttpRequest& request) {
+	std::string host = request.getHost();
+	int port = request.getPort();
+	std::string path = request.getPath();
+	const ServerConfig* server = nullptr;
+	size_t	bestMatchLen = 0;
+	int		bestMatchIdx = 0;
+
+	for (size_t i = 0; i < _config.GetServer().size(); i++){
+		if (host == _config.GetServer()[i].host && port == _config.GetServer()[i].port)
+			server = &_config.GetServer()[i];
+	}
+	if (server == nullptr) {
+		server = &_config.GetServer()[0];
+	}
+	for (size_t i = 0; i < server->locations.size(); i++){
+		const std::string& locPath = server->locations[i].path;
+		if (path.substr(0, locPath.size()) == locPath) {
+			if (locPath.size() > bestMatchLen) {
+				bestMatchLen = locPath.size();
+				bestMatchIdx = i;
+			}
+		}
+	}
+	return (server->locations[bestMatchIdx]);
 }
 
 bool Server::sendResponse(Connection &conn) {

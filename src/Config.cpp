@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <sstream>
+#include <unistd.h>
 
 Config::Config(const std::string& path){
 	std::string content;
@@ -74,9 +75,18 @@ void Config::parseServerBlock(std::ifstream& file, ServerConfig& server){
 			LocationConfig location;
 			iss >> location.path;
 			parseLocationBlock(file, location);
-			server.location.push_back(location);
+			server.locations.push_back(location);
 		}
 	}
+}
+
+std::string makeAbsolute(const std::string& path) {
+	if (path[0] == '/')
+		return path; // al absoluut, niets te doen
+
+	char cwd[1024];
+	getcwd(cwd, sizeof(cwd));
+	return std::string(cwd) + "/" + path;
 }
 
 void Config::parseLocationBlock(std::ifstream& file, LocationConfig& location){
@@ -95,7 +105,7 @@ void Config::parseLocationBlock(std::ifstream& file, LocationConfig& location){
 		else if (key == "root"){
 			iss >> path;
 			stripSemicolon(path);
-			location.root = path;
+			location.root = makeAbsolute(path);
 		}
 		else if (key == "index"){
 			iss >> path;
@@ -110,13 +120,13 @@ void Config::parseLocationBlock(std::ifstream& file, LocationConfig& location){
 		else if (key == "upload_store"){
 			iss >> path;
 			stripSemicolon(path);
-			location.upload_store = path;
+			location.upload_store = makeAbsolute(path);
 		}
 		else if (key == "cgi"){
 			iss >> ext >> path;
 			stripSemicolon(path);
 			location.cgi_ext = ext;
-			location.cgi_path = path;
+			location.cgi_path = makeAbsolute(path);
 		}
 		else if (key == "redirect"){
 			iss >> code >> path;

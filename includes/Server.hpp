@@ -8,6 +8,7 @@
 #include <vector>
 #include "Client.hpp"
 #include "Config.hpp"
+#include "HttpRequest.hpp"
 
 class Server {
 	private:
@@ -41,6 +42,7 @@ class Server {
 		bool		sendResponse(Connection& conn);
 		bool		isCompleteRequest(Connection& conn);
 		bool		readFromClient(Connection& conn);
+		const LocationConfig& findLocation(const HttpRequest& request);
 
 	public:
 		Server() = delete;

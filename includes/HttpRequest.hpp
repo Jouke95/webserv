@@ -9,6 +9,7 @@ class HttpRequest {
 		std::string	_path;
 		std::string	_version;
 		std::string	_host;
+		int			_port;
 		std::string	_contentType;
 		int			_contentLength;
 		std::string	_userAgent;
@@ -25,6 +26,7 @@ class HttpRequest {
 		void		setPath(const std::string& path);
 		void		setVersion(std::string& version);
 		void		setHost(const std::string& host);
+		void		setPort(const int port);
 		void		setContentType(const std::string& contentType);
 		void		setContentLength(int contentLength);
 		void		setUserAgent(const std::string& userAgent);
@@ -34,6 +36,7 @@ class HttpRequest {
 		std::string	getMethod() const;
 		std::string	getPath() const;
 		std::string	getHost() const;
+		int			getPort() const;
 		std::string	getContentType() const;
 		std::string	getVersion() const;
 		int			getContentLength() const;

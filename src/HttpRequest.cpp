@@ -1,5 +1,6 @@
 
 #include <HttpRequest.hpp>
+#include <iostream>
 
 HttpRequest::HttpRequest() : _contentLength(0) {}
 
@@ -18,6 +19,7 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other) {
 		_contentLength = other._contentLength;
 		_contentType = other._contentType;
 		_host = other._host;
+		_port = other._port;
 		_method = other._method;
 		_path = other._path;
 		_userAgent = other._userAgent;
@@ -32,6 +34,10 @@ void HttpRequest::setMethod(const std::string& method) {
 
 void HttpRequest::setHost(const std::string& host) {
 	_host = host;
+}
+
+void HttpRequest::setPort(const int port) {
+	_port = port;
 }
 
 void HttpRequest::setPath(const std::string& path) {
@@ -69,6 +75,10 @@ std::string HttpRequest::getMethod() const {
 
 std::string HttpRequest::getHost() const {
 	return _host;
+}
+
+int HttpRequest::getPort() const {
+	return _port;
 }
 
 std::string HttpRequest::getPath() const {

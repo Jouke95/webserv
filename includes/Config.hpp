@@ -25,7 +25,7 @@ struct ServerConfig {
 	int							port;
 	int							max_body_size;
 	std::map<int, std::string>	error_page;
-	std::vector<LocationConfig>	location;
+	std::vector<LocationConfig>	locations;
 
 	ServerConfig() : port(0), max_body_size(0) {}
 };

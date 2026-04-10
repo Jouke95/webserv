@@ -5,7 +5,7 @@ CFLAGS = -Wall -Wextra -Werror -Iincludes
 
 SRCS = src/main.cpp src/RequestParser.cpp src/Server.cpp src/HttpRequest.cpp src/HttpResponse.cpp \
 src/endpoints/CommonGatewayInterface.cpp src/endpoints/AEndpoint.cpp src/endpoints/TextEndpoint.cpp src/Client.cpp \
-src/Config.cpp
+src/Config.cpp src/ResponseBuilder.cpp
 
 OBJ_DIR = obj
 
