@@ -1,6 +1,4 @@
-
 #include <HttpRequest.hpp>
-#include <iostream>
 
 HttpRequest::HttpRequest() : _contentLength(0) {}
 
@@ -12,21 +10,20 @@ HttpRequest::HttpRequest(const HttpRequest& other) {
 }
 
 HttpRequest& HttpRequest::operator=(const HttpRequest& other) {
-	if (this != &other)
-	{
-		_body = other._body;
-		_connection = other._connection;
-		_contentLength = other._contentLength;
-		_contentType = other._contentType;
-		_host = other._host;
-		_port = other._port;
+	if (this != &other) {
 		_method = other._method;
 		_path = other._path;
+		_version = other._version;
+		_host = other._host;
+		_port = other._port;
+		_contentType = other._contentType;
+		_contentLength = other._contentLength;
 		_userAgent = other._userAgent;
+		_connection = other._connection;
+		_body = other._body;
 	}
 	return (*this);
 }
-
 
 void HttpRequest::setMethod(const std::string& method) {
 	_method = method;
@@ -64,16 +61,16 @@ void HttpRequest::setContentLength(int contentLength) {
 	_contentLength = contentLength;
 }
 
-void HttpRequest::setVersion(std::string& version) {
+void HttpRequest::setVersion(const std::string& version) {
 	_version = version;
 }
 
 
-std::string HttpRequest::getMethod() const {
+const std::string& HttpRequest::getMethod() const {
 	return _method;
 }
 
-std::string HttpRequest::getHost() const {
+const std::string& HttpRequest::getHost() const {
 	return _host;
 }
 
@@ -81,27 +78,27 @@ int HttpRequest::getPort() const {
 	return _port;
 }
 
-std::string HttpRequest::getPath() const {
+const std::string& HttpRequest::getPath() const {
 	return _path;
 }
 
-std::string HttpRequest::getBody() const {
+const std::string& HttpRequest::getBody() const {
 	return _body;
 }
 
-std::string HttpRequest::getContentType()  const {
+const std::string& HttpRequest::getContentType()  const {
 	return _contentType;
 }
 
-std::string HttpRequest::getUserAgent() const {
+const std::string& HttpRequest::getUserAgent() const {
 	return _userAgent;
 }
 
-std::string HttpRequest::getConnection() const {
+const std::string& HttpRequest::getConnection() const {
 	return _connection;
 }
 
-std::string HttpRequest::getVersion() const {
+const std::string& HttpRequest::getVersion() const {
 	return _version;
 }
 

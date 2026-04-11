@@ -5,24 +5,22 @@
 ResponseBuilder::ResponseBuilder(HttpRequest request, LocationConfig location) : _request(request), _location(location) {
 	std::string method = _request.getMethod();
 
-	if (method == "GET"){
+	if (method == "GET") {
 		handleGet();
 	}
 
-	else if (method == "POST"){
+	else if (method == "POST") {
 		handlePost();
 	}
 
-	else if (method == "DELETE"){
+	else if (method == "DELETE") {
 		handleDelete();
 	}
 }
 
-ResponseBuilder::~ResponseBuilder(){
+ResponseBuilder::~ResponseBuilder() {}
 
-}
-
-void ResponseBuilder::handleGet(){
+void ResponseBuilder::handleGet() {
 	std::string requestje = (_location.root + _request.getPath());
 	std::cout << "requestje: "<< requestje << std::endl;
 	std::ifstream file(requestje);
@@ -38,15 +36,15 @@ void ResponseBuilder::handleGet(){
 	_response.setBody(body);
 }
 
-void ResponseBuilder::handlePost(){
+void ResponseBuilder::handlePost() {
 
 }
 
-void ResponseBuilder::handleDelete(){
+void ResponseBuilder::handleDelete() {
 
 }
 
-// std::string& ResponseBuilder::build() {
-// 	std::string i = "hello";
-// 	return i;
-// }
+std::string ResponseBuilder::build() {
+	std::string i = "hello";
+	return i;
+}

@@ -130,15 +130,8 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request);
-
-	const LocationConfig& location = findLocation(parser.getRequest());
-	std::cout << location.path << std::endl;
-
-
-	ResponseBuilder builder(parser.getRequest(), location);
-
-	// conn.client._response = builder.build();
-	// conn.pfd.events = POLLIN | POLLOUT;
+	const LocationConfig& location = getLocation(parser.getRequest());
+	buildResponse(conn, parser.getRequest(), location);
 
 	return true;
 }
@@ -154,47 +147,63 @@ bool Server::readFromClient(Connection& conn) {
 }
 
 bool Server::isCompleteRequest(Connection& conn) {
-	std::string& RequestParser = conn.client._request;
+	std::string& request = conn.client._request;
 
-	size_t headerEnd = RequestParser.find("\r\n\r\n");
+	size_t headerEnd = request.find("\r\n\r\n");
 	if (headerEnd == std::string::npos)
 		return false;
 
-	size_t pos = RequestParser.find("Content-Length");
+	size_t pos = request.find("Content-Length");
 	if (pos != std::string::npos) {
 		pos += CONTENT_LENGTH_PREFIX;
-		size_t contentLength = stoi(RequestParser.substr(pos));
-		if (RequestParser.size() - (headerEnd + HEADER_END_LEN) < contentLength)
+		size_t contentLength = stoi(request.substr(pos));
+		if (request.size() - (headerEnd + HEADER_END_LEN) < contentLength)
 			return false;
 	}
 	return true;
 }
 
-const LocationConfig& Server::findLocation(const HttpRequest& request) {
-	std::string host = request.getHost();
-	int port = request.getPort();
-	std::string path = request.getPath();
+const LocationConfig& Server::getLocation(const HttpRequest& request) {
+	const ServerConfig* server = findServer(request);
+	const LocationConfig& location = findLocation(*server, request.getPath());
+
+	return location;
+}
+
+const ServerConfig* Server::findServer(const HttpRequest& request) {
 	const ServerConfig* server = nullptr;
+
+	for (size_t i = 0; i < _config.GetServer().size(); i++){
+		if (request.getHost() == _config.GetServer()[i].host && request.getPort() == _config.GetServer()[i].port)
+			server = &_config.GetServer()[i];
+	}
+
+	if (server == nullptr)
+		server = &_config.GetServer()[0];
+
+	return server;
+}
+
+const LocationConfig& Server::findLocation(const ServerConfig& server, const std::string& path) {
 	size_t	bestMatchLen = 0;
 	int		bestMatchIdx = 0;
 
-	for (size_t i = 0; i < _config.GetServer().size(); i++){
-		if (host == _config.GetServer()[i].host && port == _config.GetServer()[i].port)
-			server = &_config.GetServer()[i];
-	}
-	if (server == nullptr) {
-		server = &_config.GetServer()[0];
-	}
-	for (size_t i = 0; i < server->locations.size(); i++){
-		const std::string& locPath = server->locations[i].path;
-		if (path.substr(0, locPath.size()) == locPath) {
+	for (size_t i = 0; i < server.locations.size(); i++){
+		const std::string& locPath = server.locations[i].path;
+		if (path.substr(0, locPath.size()) == locPath && (locPath.size() == path.size() || path[locPath.size()] == '/')) {
 			if (locPath.size() > bestMatchLen) {
 				bestMatchLen = locPath.size();
 				bestMatchIdx = i;
 			}
 		}
 	}
-	return (server->locations[bestMatchIdx]);
+	return server.locations[bestMatchIdx];
+}
+
+void Server::buildResponse(Connection& conn, const HttpRequest& request, const LocationConfig& location) {
+	ResponseBuilder builder(request, location);
+	conn.client._response = builder.build();
+	conn.pfd.events = POLLIN | POLLOUT;
 }
 
 bool Server::sendResponse(Connection &conn) {

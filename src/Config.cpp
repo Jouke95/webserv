@@ -5,14 +5,14 @@
 #include <sstream>
 #include <unistd.h>
 
-Config::Config(const std::string& path){
+Config::Config(const std::string& path) {
 	std::string content;
 	std::ifstream file(path);
 
 	if (!file.is_open())
 		throw std::runtime_error("Could not open config file: " + path);
 
-	while (std::getline(file, content)){
+	while (std::getline(file, content)) {
 		if (content.find("server {") != std::string::npos) {
 			ServerConfig server;
 			parseServerBlock(file, server);
@@ -21,21 +21,19 @@ Config::Config(const std::string& path){
 	}
 }
 
-Config::Config(const Config& other){
+Config::Config(const Config& other) {
 	*this = other;
 }
 
-Config& Config::operator=(const Config& other){
+Config& Config::operator=(const Config& other) {
 	if (this != &other)
 		_servers = other._servers;
 	return *this;
 }
 
-Config::~Config(){
+Config::~Config() {}
 
-}
-
-const std::vector<ServerConfig>& Config::GetServer() const{
+const std::vector<ServerConfig>& Config::GetServer() const {
 	return this->_servers;
 }
 
@@ -44,34 +42,34 @@ static void stripSemicolon(std::string& value) {
 		value.pop_back();
 }
 
-void Config::parseServerBlock(std::ifstream& file, ServerConfig& server){
+void Config::parseServerBlock(std::ifstream& file, ServerConfig& server) {
 	std::string line, key, value, path;
 	while (std::getline(file, line)) {
 		if (line.find("}") != std::string::npos)
 			return ;
 		std::istringstream iss(line);
 		iss >> key;
-		if (key == "host"){
+		if (key == "host") {
 			iss >> value;
 			stripSemicolon(value);
 			server.host = value;
 		}
-		else if (key == "port"){
+		else if (key == "port") {
 			iss >> value;
 			stripSemicolon(value);
 			server.port = stoi(value);
 		}
-		else if (key == "max_body_size"){
+		else if (key == "max_body_size") {
 			iss >> value;
 			stripSemicolon(value);
 			server.max_body_size = std::stoi(value);
 		}
-		else if (key == "error_page"){
+		else if (key == "error_page") {
 			iss >> value >> path;
 			stripSemicolon(path);
 			server.error_page[std::stoi(value)] = path;
 		}
-		else if (key == "location"){
+		else if (key == "location") {
 			LocationConfig location;
 			iss >> location.path;
 			parseLocationBlock(file, location);
@@ -89,46 +87,46 @@ std::string makeAbsolute(const std::string& path) {
 	return std::string(cwd) + "/" + path;
 }
 
-void Config::parseLocationBlock(std::ifstream& file, LocationConfig& location){
+void Config::parseLocationBlock(std::ifstream& file, LocationConfig& location) {
 	std::string line, key, path, method, ext, code;
 	while (std::getline(file, line)) {
 		if (line.find("}") != std::string::npos)
 			return ;
 		std::istringstream iss(line);
 		iss >> key;
-		if (key == "methods"){
+		if (key == "methods") {
 			while (iss >> method) {
 				stripSemicolon(method);
 				location.methods.push_back(method);
 			}
 		}
-		else if (key == "root"){
+		else if (key == "root") {
 			iss >> path;
 			stripSemicolon(path);
 			location.root = makeAbsolute(path);
 		}
-		else if (key == "index"){
+		else if (key == "index") {
 			iss >> path;
 			stripSemicolon(path);
 			location.index = path;
 		}
-		else if (key == "autoindex"){
+		else if (key == "autoindex") {
 			iss >> path;
 			stripSemicolon(path);
 			location.autoindex = (path == "on");
 		}
-		else if (key == "upload_store"){
+		else if (key == "upload_store") {
 			iss >> path;
 			stripSemicolon(path);
 			location.upload_store = makeAbsolute(path);
 		}
-		else if (key == "cgi"){
+		else if (key == "cgi") {
 			iss >> ext >> path;
 			stripSemicolon(path);
 			location.cgi_ext = ext;
 			location.cgi_path = makeAbsolute(path);
 		}
-		else if (key == "redirect"){
+		else if (key == "redirect") {
 			iss >> code >> path;
 			stripSemicolon(path);
 			location.redirect_code = stoi(code);

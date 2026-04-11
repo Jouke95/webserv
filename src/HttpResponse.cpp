@@ -1,22 +1,16 @@
 #include <HttpResponse.hpp>
 
-HttpResponse::HttpResponse() : _statusCode(0), _contentLength(0)
-{
-}
+HttpResponse::HttpResponse() : _statusCode(0), _contentLength(0) {}
 
-HttpResponse::~HttpResponse()
-{
-}
+HttpResponse::~HttpResponse() {}
 
-HttpResponse::HttpResponse(const HttpResponse& other)
-{
+HttpResponse::HttpResponse(const HttpResponse& other) {
 	*this = other;
 }
 
 HttpResponse& HttpResponse::operator=(const HttpResponse& other)
 {
-	if (this != &other)
-	{
+	if (this != &other) {
 		_statusCode = other._statusCode;
 		_body = other._body;
 		_connection = other._connection;
@@ -28,74 +22,60 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& other)
 }
 
 
-void HttpResponse::setStatusCode(int statusCode)
-{
+void HttpResponse::setStatusCode(int statusCode) {
 	_statusCode = statusCode;
 }
 
-void HttpResponse::setStatusMessage(const std::string& statusMessage)
-{
+void HttpResponse::setStatusMessage(const std::string& statusMessage) {
 	_statusMessage = statusMessage;
 }
 
-void HttpResponse::setConnection(const std::string& connection)
-{
+void HttpResponse::setConnection(const std::string& connection) {
 	_connection = connection;
 }
 
-void HttpResponse::setContentType(const std::string& contentType)
-{
+void HttpResponse::setContentType(const std::string& contentType) {
 	_contentType = contentType;
 }
 
-void HttpResponse::setBody(const std::string& body)
-{
+void HttpResponse::setBody(const std::string& body) {
 	_body = body;
 }
 
-void HttpResponse::setVersion(const std::string& version)
-{
+void HttpResponse::setVersion(const std::string& version) {
 	_version = version;
 }
 
 
-void HttpResponse::setContentLength(int contentLength)
-{
+void HttpResponse::setContentLength(int contentLength) {
 	_contentLength = contentLength;
 }
 
-int HttpResponse::getStatusCode() const
-{
+int HttpResponse::getStatusCode() const {
 	return _statusCode;
 }
 
-std::string HttpResponse::getStatusMessage() const
-{
+std::string HttpResponse::getStatusMessage() const {
 	return _statusMessage;
 }
 
-std::string HttpResponse::getConnection() const
-{
+std::string HttpResponse::getConnection() const {
 	return _connection;
 }
 
-std::string HttpResponse::getContentType() const
-{
+std::string HttpResponse::getContentType() const {
 	return _contentType;
 }
 
-std::string HttpResponse::getBody() const
-{
+std::string HttpResponse::getBody() const {
 	return _body;
 }
 
-std::string HttpResponse::getVersion() const
-{
+std::string HttpResponse::getVersion() const {
 	return _version;
 }
 
 
-int HttpResponse::getContentLength() const
-{
+int HttpResponse::getContentLength() const {
 	return _contentLength;
 }

@@ -19,7 +19,7 @@ class ResponseBuilder {
 	void handlePost();
 	void handleDelete();
 
-	// std::string& build();
+	std::string build();
 };
 
 #endif

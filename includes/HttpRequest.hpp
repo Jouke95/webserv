@@ -24,7 +24,7 @@ class HttpRequest {
 
 		void		setMethod(const std::string& method);
 		void		setPath(const std::string& path);
-		void		setVersion(std::string& version);
+		void		setVersion(const std::string& version);
 		void		setHost(const std::string& host);
 		void		setPort(const int port);
 		void		setContentType(const std::string& contentType);
@@ -33,16 +33,16 @@ class HttpRequest {
 		void		setConnection(const std::string& connection);
 		void		setBody(const std::string& body);
 
-		std::string	getMethod() const;
-		std::string	getPath() const;
-		std::string	getHost() const;
-		int			getPort() const;
-		std::string	getContentType() const;
-		std::string	getVersion() const;
-		int			getContentLength() const;
-		std::string	getUserAgent() const;
-		std::string	getConnection() const;
-		std::string	getBody() const;
+		const std::string&	getMethod() const;
+		const std::string&	getPath() const;
+		const std::string&	getHost() const;
+		int					getPort() const;
+		const std::string&	getContentType() const;
+		const std::string&	getVersion() const;
+		int					getContentLength() const;
+		const std::string&	getUserAgent() const;
+		const std::string&	getConnection() const;
+		const std::string&	getBody() const;
 };
 
 #endif

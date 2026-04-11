@@ -42,7 +42,10 @@ class Server {
 		bool		sendResponse(Connection& conn);
 		bool		isCompleteRequest(Connection& conn);
 		bool		readFromClient(Connection& conn);
-		const LocationConfig& findLocation(const HttpRequest& request);
+		const LocationConfig&	getLocation(const HttpRequest& request);
+		const ServerConfig*		findServer(const HttpRequest& request);
+		const LocationConfig&	findLocation(const ServerConfig& server, const std::string& path);
+		void		buildResponse(Connection& conn, const HttpRequest& request, const LocationConfig& location);
 
 	public:
 		Server() = delete;
