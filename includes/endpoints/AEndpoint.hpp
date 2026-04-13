@@ -4,17 +4,16 @@
 #include "../HttpRequest.hpp"
 #include "../HttpResponse.hpp"
 
-class AEndpoint
-{
-protected:
-	HttpRequest  _request;
-	HttpResponse _response;
+class AEndpoint {
+	protected:
+		HttpRequest  _request;
+		HttpResponse _response;
 
-public:
-	AEndpoint(HttpRequest& request, HttpResponse& response) : _request(request), _response(response) {}
-	virtual ~AEndpoint() = default;
+	public:
+		AEndpoint(HttpRequest& request, HttpResponse& response) : _request(request), _response(response) {}
+		virtual ~AEndpoint() = default;
 
-	virtual HttpResponse handle() = 0;
+		virtual HttpResponse handle() = 0;
 };
 
 #endif

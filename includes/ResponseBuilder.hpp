@@ -7,19 +7,13 @@
 
 class ResponseBuilder {
 	private:
-		HttpRequest _request;
-		LocationConfig _location;
 		HttpResponse _response;
 
 	public:
-	ResponseBuilder(HttpRequest request, LocationConfig location);
-	~ResponseBuilder();
+		ResponseBuilder(const HttpResponse& response);
+		~ResponseBuilder();
 
-	void handleGet();
-	void handlePost();
-	void handleDelete();
-
-	std::string build();
+		std::string build();
 };
 
 #endif

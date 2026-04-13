@@ -31,19 +31,19 @@ struct ServerConfig {
 };
 
 class Config {
-private:
-	std::vector<ServerConfig>	_servers;
+	private:
+		std::vector<ServerConfig>	_servers;
 
-	void parseServerBlock(std::ifstream& file, ServerConfig& server);
-	void parseLocationBlock(std::ifstream& file, LocationConfig& location);
+		void parseServerBlock(std::ifstream& file, ServerConfig& server);
+		void parseLocationBlock(std::ifstream& file, LocationConfig& location);
 
-public:
-	Config(const std::string& path);
-	Config(const Config& other);
-	Config& operator=(const Config& other);
-	~Config();
+	public:
+		Config(const std::string& path);
+		Config(const Config& other);
+		Config& operator=(const Config& other);
+		~Config();
 
-	const std::vector<ServerConfig>& GetServer() const;
+		const std::vector<ServerConfig>& GetServer() const;
 };
 
 #endif

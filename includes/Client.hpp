@@ -15,5 +15,4 @@ class Client {
 		ssize_t bytesSent;
 };
 
-
 #endif

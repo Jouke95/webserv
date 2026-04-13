@@ -131,7 +131,9 @@ bool Server::handleRequest(Connection& conn) {
 
 	RequestParser parser(conn.client._request);
 	const LocationConfig& location = getLocation(parser.getRequest());
-	buildResponse(conn, parser.getRequest(), location);
+	RequestHandler handler(parser.getRequest(), location);
+
+	buildResponse(conn, handler.getResponse());
 
 	return true;
 }
@@ -200,8 +202,8 @@ const LocationConfig& Server::findLocation(const ServerConfig& server, const std
 	return server.locations[bestMatchIdx];
 }
 
-void Server::buildResponse(Connection& conn, const HttpRequest& request, const LocationConfig& location) {
-	ResponseBuilder builder(request, location);
+void Server::buildResponse(Connection& conn, const HttpResponse& response) {
+	ResponseBuilder builder(response);
 	conn.client._response = builder.build();
 	conn.pfd.events = POLLIN | POLLOUT;
 }

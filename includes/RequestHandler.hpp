@@ -1,0 +1,24 @@
+#ifndef REQUESTHANDLER_HPP
+#define REQUESTHANDLER_HPP
+
+#include "HttpResponse.hpp"
+#include "HttpRequest.hpp"
+#include "Config.hpp"
+
+class RequestHandler {
+	private:
+		HttpResponse _response;
+		HttpRequest _request;
+		LocationConfig _location;
+
+	public:
+		RequestHandler(const HttpRequest& request, const LocationConfig& location);
+		~RequestHandler();
+
+		void handle();
+		HttpResponse& getResponse();
+		bool methodCheck();
+		bool redirectCheck();
+};
+
+#endif
