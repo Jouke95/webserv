@@ -15,6 +15,8 @@ class HttpResponse {
 		int			_contentLength;
 		std::map<std::string, std::string> _headers;
 
+		static std::map<int, std::string> _statusMessages;
+
 	public:
 		HttpResponse();
 		~HttpResponse();
@@ -37,7 +39,10 @@ class HttpResponse {
 		std::string	getBody() const;
 		std::string	getVersion() const;
 		int			getContentLength() const;
-		const std::map<std::string, std::string>& getHeader() const;
+		const std::map<std::string, std::string>& getHeaders() const;
+
+		static std::map<int, std::string> initStatusMessages();
+
 };
 
 #endif

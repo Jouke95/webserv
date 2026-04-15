@@ -18,12 +18,17 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& other)
 		_statusMessage = other._statusMessage;
 		_contentType = other._contentType;
 	}
-	return (*this);
+	return *this;
 }
 
-
 void HttpResponse::setStatusCode(int statusCode) {
-	_statusCode = statusCode;
+	std::map<int, std::string>::iterator it = _statusMessages.find(statusCode);
+	if (it == _statusMessages.end()) {
+		setStatusMessage("Unknown Status");
+		return;
+	}
+
+	setStatusMessage(it->second);
 }
 
 void HttpResponse::setStatusMessage(const std::string& statusMessage) {
@@ -75,7 +80,31 @@ std::string HttpResponse::getVersion() const {
 	return _version;
 }
 
-
 int HttpResponse::getContentLength() const {
 	return _contentLength;
+}
+
+const std::map<std::string, std::string>& HttpResponse::getHeaders() const {
+	return _headers;
+}
+
+std::map<int, std::string> HttpResponse::_statusMessages = HttpResponse::initStatusMessages();
+
+std::map<int, std::string> HttpResponse::initStatusMessages() {
+	std::map<int, std::string> m;
+
+	m[200] = "OK";
+	m[201] = "Created";
+	m[202] = "Accepted";
+	m[301] = "Moved Permanently";
+	m[400] = "Bad Request";
+	m[401] = "Unauthorized";
+	m[403] = "Forbidden";
+	m[404] = "Not Found";
+	m[405] = "Method Not Allowed";
+	m[500] = "Internal Server Error";
+	m[502] = "Bad Gateway";
+	m[504] = "Gateway Timeout";
+
+	return m;
 }

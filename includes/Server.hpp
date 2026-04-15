@@ -45,7 +45,7 @@ class Server {
 		const LocationConfig&	getLocation(const HttpRequest& request);
 		const ServerConfig*		findServer(const HttpRequest& request);
 		const LocationConfig&	findLocation(const ServerConfig& server, const std::string& path);
-		void		buildResponse(Connection& conn, const HttpRequest& request, const LocationConfig& location);
+		void		buildResponse(Connection& conn, const HttpResponse& response);
 
 	public:
 		Server() = delete;
