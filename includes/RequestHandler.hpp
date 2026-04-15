@@ -16,9 +16,17 @@ class RequestHandler {
 		~RequestHandler();
 
 		void handle();
+		void handleGet();
+		void handlePost();
+		void handleDelete();
+		void handlePut();
+		
 		HttpResponse& getResponse();
 		bool methodCheck();
 		bool redirectCheck();
+
+
+		int giveErrorResponse(int code);
 };
 
 #endif

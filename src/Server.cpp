@@ -5,6 +5,7 @@
 #include "Server.hpp"
 #include "RequestParser.hpp"
 #include "ResponseBuilder.hpp"
+#include "RequestHandler.hpp"
 
 Server::Server(const Config& config) : _config(config) {}
 
