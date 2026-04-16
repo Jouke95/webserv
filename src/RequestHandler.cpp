@@ -1,6 +1,7 @@
 #include "RequestHandler.hpp"
 #include <fstream>
 #include <iostream>
+#include <string>
 
 RequestHandler::RequestHandler(const HttpRequest& request, const LocationConfig& location) : _request(request), _location(location) {
 	handle();
@@ -49,27 +50,20 @@ bool RequestHandler::redirectCheck() {
 	return false;
 }
 
-std::string getMimeType(const std::string& extension){
-	std::map<std::string, std::string> mimeTypes;
-	mimeTypes["html"] = "text/html";
-	mimeTypes["txt"]  = "text/plain";
-	mimeTypes["jpg"]  = "image/jpeg";
-	mimeTypes["png"]  = "image/png";
-	mimeTypes["css"]  = "text/css";
-	mimeTypes["js"]  = "application/javascript";
-
-	std::map<std::string, std::string>::iterator it = mimeTypes.find(extension);
-	if (it != mimeTypes.end())
-		return it->second;
-	return "application/octet-stream";
-}
-
 void RequestHandler::handleGet(){
 	std::string path = _location.root + _request.getPath();
+	if (path.back() == '/'){
+		if (!_location.index.empty())
+			path = path + _location.index;
+		else {
+			_response.setStatusCode(403);
+			return;
+		}
+	}
 	std::ifstream file(path);
 	if (!file.is_open()) {
 		_response.setStatusCode(404);
-		return ;
+		return;
 	}
 	std::string body((std::istreambuf_iterator<char>(file)),
 		std::istreambuf_iterator<char>());
@@ -77,8 +71,18 @@ void RequestHandler::handleGet(){
 	_response.setContentLength(body.size());
 	_response.setStatusCode(200);
 	_response.setVersion(_request.getVersion());
-	size_t typePos = path.rfind('.');
-	_response.setContentType(getMimeType(path.substr(typePos + 1)));
+	size_t lastSlash = path.rfind('/');
+	size_t lastDot = path.rfind('.');
+	if (lastDot == std::string::npos || lastDot < lastSlash){
+		_response.setContentType("application/octet-stream");
+		return;
+	}
+	std::string extension = path.substr(lastDot + 1);
+	std::map<std::string, std::string>::iterator it = _mimeTypes.find(extension);
+	if (it != _mimeTypes.end())
+		_response.setContentType(it->second);
+	else
+		_response.setContentType("application/octet-stream");
 }
 
 void RequestHandler::handlePost(){
@@ -95,4 +99,18 @@ void RequestHandler::handlePut(){
 
 int RequestHandler::giveErrorResponse(int code){
 
+}
+
+std::map<std::string, std::string> RequestHandler::_mimeTypes = RequestHandler::initMimeTypes();
+
+std::map<std::string, std::string> RequestHandler::initMimeTypes() {
+	std::map<std::string, std::string> mimeTypes;
+	mimeTypes["html"] = "text/html";
+	mimeTypes["txt"]  = "text/plain";
+	mimeTypes["jpg"]  = "image/jpeg";
+	mimeTypes["png"]  = "image/png";
+	mimeTypes["css"]  = "text/css";
+	mimeTypes["js"]  = "application/javascript";
+
+	return mimeTypes;
 }

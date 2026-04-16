@@ -20,13 +20,15 @@ class RequestHandler {
 		void handlePost();
 		void handleDelete();
 		void handlePut();
-		
+
 		HttpResponse& getResponse();
 		bool methodCheck();
 		bool redirectCheck();
 
 
 		int giveErrorResponse(int code);
+		static std::map<std::string, std::string> _mimeTypes;
+		static std::map<std::string, std::string> initMimeTypes();
 };
 
 #endif
