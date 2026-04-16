@@ -11,12 +11,12 @@ RequestHandler::RequestHandler(const HttpRequest& request, const LocationConfig&
 RequestHandler::~RequestHandler() {}
 
 void RequestHandler::handle() {
-	bool methodAllowed = methodCheck();
-	if (!methodAllowed)
-		return ;
-
 	bool redirect = redirectCheck();
 	if (redirect)
+		return ;
+
+	bool methodAllowed = methodCheck();
+	if (!methodAllowed)
 		return ;
 
 	std::string method = _request.getMethod();
@@ -32,7 +32,7 @@ void RequestHandler::handle() {
 }
 
 bool RequestHandler::methodCheck() {
-	for (int i = 0; i < _location.methods.size(); i++) {
+	for (size_t i = 0; i < _location.methods.size(); i++) {
 		if (_request.getMethod() == _location.methods[i]) {
 			return true;
 		}
@@ -51,7 +51,7 @@ bool RequestHandler::redirectCheck() {
 }
 
 std::string RequestHandler::makePath() const {
-	return (_location.root + _request.getPath().substr(_location.path.size()));
+	return (_location.root + _request.getPath().substr(_location.path.size() - 1));
 }
 
 void RequestHandler::handleGet(){
@@ -117,10 +117,6 @@ void RequestHandler::handlePut(){
 	std::string path = makePath();
 }
 
-int RequestHandler::giveErrorResponse(int code){
-
-}
-
 std::map<std::string, std::string> RequestHandler::_mimeTypes = RequestHandler::initMimeTypes();
 
 std::map<std::string, std::string> RequestHandler::initMimeTypes() {
@@ -135,3 +131,6 @@ std::map<std::string, std::string> RequestHandler::initMimeTypes() {
 	return mimeTypes;
 }
 
+HttpResponse RequestHandler::getResponse() const {
+	return _response;
+}

@@ -21,12 +21,11 @@ class RequestHandler {
 		void handleDelete();
 		void handlePut();
 
-		HttpResponse& getResponse();
+		HttpResponse getResponse() const;
 		bool methodCheck();
 		bool redirectCheck();
 		std::string makePath() const;
 
-		int giveErrorResponse(int code);
 		static std::map<std::string, std::string> _mimeTypes;
 		static std::map<std::string, std::string> initMimeTypes();
 };

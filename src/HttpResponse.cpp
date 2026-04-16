@@ -1,6 +1,6 @@
 #include <HttpResponse.hpp>
 
-HttpResponse::HttpResponse() : _statusCode(0), _contentLength(0) {}
+HttpResponse::HttpResponse() : _statusCode(0), _version("HTTP/1.1"), _contentLength(0) {}
 
 HttpResponse::~HttpResponse() {}
 
@@ -8,8 +8,7 @@ HttpResponse::HttpResponse(const HttpResponse& other) {
 	*this = other;
 }
 
-HttpResponse& HttpResponse::operator=(const HttpResponse& other)
-{
+HttpResponse& HttpResponse::operator=(const HttpResponse& other) {
 	if (this != &other) {
 		_statusCode = other._statusCode;
 		_body = other._body;
@@ -17,11 +16,15 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& other)
 		_contentLength = other._contentLength;
 		_statusMessage = other._statusMessage;
 		_contentType = other._contentType;
+		_version = other._version;
+		_headers = other._headers;
 	}
 	return *this;
 }
 
 void HttpResponse::setStatusCode(int statusCode) {
+	_statusCode = statusCode;
+
 	std::map<int, std::string>::iterator it = _statusMessages.find(statusCode);
 	if (it == _statusMessages.end()) {
 		setStatusMessage("Unknown Status");
@@ -54,6 +57,10 @@ void HttpResponse::setVersion(const std::string& version) {
 
 void HttpResponse::setContentLength(int contentLength) {
 	_contentLength = contentLength;
+}
+
+void HttpResponse::setHeader(const std::string& key, const std::string& value) {
+	_headers[key] = value;
 }
 
 int HttpResponse::getStatusCode() const {
@@ -98,6 +105,7 @@ std::map<int, std::string> HttpResponse::initStatusMessages() {
 	m[202] = "Accepted";
 	m[204] = "No Content";
 	m[301] = "Moved Permanently";
+	m[303] = "See Other";
 	m[400] = "Bad Request";
 	m[401] = "Unauthorized";
 	m[403] = "Forbidden";
