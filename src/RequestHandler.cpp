@@ -44,8 +44,7 @@ bool RequestHandler::methodCheck() {
 bool RequestHandler::redirectCheck() {
 	if (_location.redirect_code != 0 && _location.redirect_page != "") {
 		_response.setHeader("Location", _location.redirect_page);
-		_response.setStatusCode(301);
-		_response.setStatusMessage("Moved Permanently");
+		_response.setStatusCode(_location.redirect_code);
 		return true;
 	}
 	return false;
@@ -135,3 +134,4 @@ std::map<std::string, std::string> RequestHandler::initMimeTypes() {
 
 	return mimeTypes;
 }
+
