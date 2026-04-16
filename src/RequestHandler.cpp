@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <filesystem>
 
 RequestHandler::RequestHandler(const HttpRequest& request, const LocationConfig& location) : _request(request), _location(location) {
 	handle();
@@ -36,7 +37,7 @@ bool RequestHandler::methodCheck() {
 			return true;
 		}
 	}
-	giveErrorResponse(405);
+	_response.setStatusCode(405);
 	return false;
 }
 
@@ -50,8 +51,12 @@ bool RequestHandler::redirectCheck() {
 	return false;
 }
 
+std::string RequestHandler::makePath() const {
+	return (_location.root + _request.getPath().substr(_location.path.size()));
+}
+
 void RequestHandler::handleGet(){
-	std::string path = _location.root + _request.getPath();
+	std::string path = makePath();
 	if (path.back() == '/'){
 		if (!_location.index.empty())
 			path = path + _location.index;
@@ -83,6 +88,7 @@ void RequestHandler::handleGet(){
 		_response.setContentType(it->second);
 	else
 		_response.setContentType("application/octet-stream");
+	return;
 }
 
 void RequestHandler::handlePost(){
@@ -90,11 +96,26 @@ void RequestHandler::handlePost(){
 }
 
 void RequestHandler::handleDelete(){
-
+	std::string path = makePath();
+	if (!std::filesystem::exists(path)){
+		_response.setStatusCode(404);
+		return;
+	}
+	try {
+		std::filesystem::remove(path);
+		_response.setStatusCode(204);
+	} catch (const std::filesystem::filesystem_error& e) {
+		if (e.code() == std::errc::permission_denied)
+			_response.setStatusCode(403);
+		else
+			_response.setStatusCode(500);
+	}
+	_response.setVersion(_request.getVersion());
+	return;
 }
 
 void RequestHandler::handlePut(){
-
+	std::string path = makePath();
 }
 
 int RequestHandler::giveErrorResponse(int code){

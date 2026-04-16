@@ -24,7 +24,7 @@ class RequestHandler {
 		HttpResponse& getResponse();
 		bool methodCheck();
 		bool redirectCheck();
-
+		std::string makePath() const;
 
 		int giveErrorResponse(int code);
 		static std::map<std::string, std::string> _mimeTypes;

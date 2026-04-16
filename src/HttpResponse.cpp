@@ -96,6 +96,7 @@ std::map<int, std::string> HttpResponse::initStatusMessages() {
 	m[200] = "OK";
 	m[201] = "Created";
 	m[202] = "Accepted";
+	m[204] = "No Content";
 	m[301] = "Moved Permanently";
 	m[400] = "Bad Request";
 	m[401] = "Unauthorized";
