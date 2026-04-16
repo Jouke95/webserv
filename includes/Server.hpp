@@ -9,6 +9,7 @@
 #include "Client.hpp"
 #include "Config.hpp"
 #include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
 
 class Server {
 	private:
