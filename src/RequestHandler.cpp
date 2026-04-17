@@ -26,9 +26,6 @@ void RequestHandler::handle() {
 		handlePost();
 	else if (method == "DELETE")
 		handleDelete();
-	else if (method == "PUT")
-		handlePut();
-
 }
 
 bool RequestHandler::methodCheck() {
@@ -50,12 +47,14 @@ bool RequestHandler::redirectCheck() {
 	return false;
 }
 
-std::string RequestHandler::makePath() const {
-	return (_location.root + _request.getPath().substr(_location.path.size() - 1));
+std::string RequestHandler::makePath(const std::string& base) const {
+	return (base + _request.getPath().substr(_location.path.size()));
 }
 
 void RequestHandler::handleGet(){
-	std::string path = makePath();
+	std::string path = _location.root + _request.getPath();
+	std::cout << "GET path: " << path << std::endl;
+
 	if (path.back() == '/'){
 		if (!_location.index.empty())
 			path = path + _location.index;
@@ -91,11 +90,25 @@ void RequestHandler::handleGet(){
 }
 
 void RequestHandler::handlePost(){
+	if (_location.upload_store.empty()) {
+		_response.setStatusCode(500);
+		return;
+	}
+	std::string path = makePath(_location.upload_store);
+	std::cout << "POST path: " << path << std::endl;
 
+	std::ofstream file(path);
+	if (!file.is_open()){
+		_response.setStatusCode(500);
+		return;
+	}
+	file << _request.getBody();
+	_response.setStatusCode(201);
+	_response.setVersion(_request.getVersion());
 }
 
 void RequestHandler::handleDelete(){
-	std::string path = makePath();
+	std::string path = _location.root + _request.getPath();
 	if (!std::filesystem::exists(path)){
 		_response.setStatusCode(404);
 		return;
@@ -111,10 +124,6 @@ void RequestHandler::handleDelete(){
 	}
 	_response.setVersion(_request.getVersion());
 	return;
-}
-
-void RequestHandler::handlePut(){
-	std::string path = makePath();
 }
 
 std::map<std::string, std::string> RequestHandler::_mimeTypes = RequestHandler::initMimeTypes();
