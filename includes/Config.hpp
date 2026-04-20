@@ -1,38 +1,40 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include <vector>
-#include <string>
+#include <fstream>
 #include <map>
+#include <string>
+#include <vector>
 
 struct LocationConfig {
-	std::string					path;
-	std::vector<std::string>	methods;
-	std::string					root;
-	std::string					index;
-	bool						autoindex;
-	std::string					upload_store;
-	std::string					cgi_ext;
-	std::string					cgi_path;
-	int							redirect_code;
-	std::string					redirect_page;
+	std::string path;
+	std::vector<std::string> methods;
+	std::string root;
+	std::string index;
+	bool autoindex;
+	std::string uploadStore;
+	std::vector<std::string> cgiExtensions;
+	std::vector<std::string> cgiPaths;
+	int redirectCode;
+	std::string redirectPage;
 
-	LocationConfig() : autoindex(false), redirect_code(0){}
+	LocationConfig() : autoindex(false), redirectCode(0) {}
 };
 
 struct ServerConfig {
-	std::string					host;
-	int							port;
-	int							max_body_size;
-	std::map<int, std::string>	error_page;
-	std::vector<LocationConfig>	locations;
+	std::string host;
+	std::string serverName;
+	int port;
+	size_t maxBodySize;
+	std::map<int, std::string> errorPages;
+	std::vector<LocationConfig> locations;
 
-	ServerConfig() : port(0), max_body_size(0) {}
+	ServerConfig() : port(0), maxBodySize(0) {}
 };
 
 class Config {
 	private:
-		std::vector<ServerConfig>	_servers;
+		std::vector<ServerConfig> _servers;
 
 		void parseServerBlock(std::ifstream& file, ServerConfig& server);
 		void parseLocationBlock(std::ifstream& file, LocationConfig& location);
@@ -43,7 +45,7 @@ class Config {
 		Config& operator=(const Config& other);
 		~Config();
 
-		const std::vector<ServerConfig>& GetServer() const;
+		const std::vector<ServerConfig>& getServers() const;
 };
 
 #endif

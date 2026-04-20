@@ -1,1 +1,0 @@
-dit is een kameel die afstroomt vanuit de regenboog minishell minishell 🌈

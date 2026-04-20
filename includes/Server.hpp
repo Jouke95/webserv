@@ -28,6 +28,8 @@ class Server {
 		std::vector<Connection> _connections;
 		Config _config;
 
+		int _numberOfConnections = 0;
+
 		// Methods
 		void		myPoll();
 		sockaddr_in	createAddress(const ServerConfig& server);
@@ -43,8 +45,7 @@ class Server {
 		bool		sendResponse(Connection& conn);
 		bool		isCompleteRequest(Connection& conn);
 		bool		readFromClient(Connection& conn);
-		const LocationConfig&	getLocation(const HttpRequest& request);
-		const ServerConfig*		findServer(const HttpRequest& request);
+		const ServerConfig&		findServer(const HttpRequest& request);
 		const LocationConfig&	findLocation(const ServerConfig& server, const std::string& path);
 		void		buildResponse(Connection& conn, const HttpResponse& response);
 

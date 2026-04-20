@@ -9,24 +9,34 @@ class RequestHandler {
 	private:
 		HttpResponse _response;
 		HttpRequest _request;
+		std::map<int, std::string> _errorPages;
 		LocationConfig _location;
 
-	public:
-		RequestHandler(const HttpRequest& request, const LocationConfig& location);
-		~RequestHandler();
+		static std::map<std::string, std::string> _mimeTypes;
+		static std::vector<std::string> _knownMethods;
+		static std::vector<std::string> _implementedMethods;
 
 		void handle();
 		void handleGet();
 		void handlePost();
 		void handleDelete();
 
-		HttpResponse getResponse() const;
-		bool methodCheck();
+		bool isValidMethod();
 		bool redirectCheck();
 		std::string makePath(const std::string& base) const;
+		void errorPage(int errorCode);
+		void setFallbackError();
+		void serveFile(const std::string& path);
+		void handleDirectory(std::string path);
+		std::string getContentType(const std::string& path);
 
-		static std::map<std::string, std::string> _mimeTypes;
-		static std::map<std::string, std::string> initMimeTypes();
+	public:
+		RequestHandler(const HttpRequest& request,
+					   const std::map<int, std::string>& errorPages,
+					   const LocationConfig& location);
+		~RequestHandler();
+
+		HttpResponse getResponse() const;
 };
 
 #endif

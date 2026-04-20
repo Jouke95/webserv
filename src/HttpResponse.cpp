@@ -112,6 +112,7 @@ std::map<int, std::string> HttpResponse::initStatusMessages() {
 	m[404] = "Not Found";
 	m[405] = "Method Not Allowed";
 	m[500] = "Internal Server Error";
+	m[501] = "Not Implemented";
 	m[502] = "Bad Gateway";
 	m[504] = "Gateway Timeout";
 

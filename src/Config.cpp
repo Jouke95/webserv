@@ -1,19 +1,19 @@
 #include "Config.hpp"
+#include <climits>
 #include <fstream>
-#include <iostream>
 #include <stdexcept>
 #include <sstream>
 #include <unistd.h>
 
 Config::Config(const std::string& path) {
-	std::string content;
+	std::string line;
 	std::ifstream file(path);
 
 	if (!file.is_open())
 		throw std::runtime_error("Could not open config file: " + path);
 
-	while (std::getline(file, content)) {
-		if (content.find("server {") != std::string::npos) {
+	while (std::getline(file, line)) {
+		if (line.find("server {") != std::string::npos) {
 			ServerConfig server;
 			parseServerBlock(file, server);
 			_servers.push_back(server);
@@ -33,41 +33,58 @@ Config& Config::operator=(const Config& other) {
 
 Config::~Config() {}
 
-const std::vector<ServerConfig>& Config::GetServer() const {
-	return this->_servers;
-}
-
 static void stripSemicolon(std::string& value) {
 	if (!value.empty() && value.back() == ';')
 		value.pop_back();
 }
 
+static std::string makeAbsolute(const std::string& path) {
+	if (path.empty() || path[0] == '/')
+		return path;
+
+	char cwd[PATH_MAX];
+	if (!getcwd(cwd, sizeof(cwd)))
+		throw std::runtime_error("getcwd failed");
+	return std::string(cwd) + "/" + path;
+}
+
 void Config::parseServerBlock(std::ifstream& file, ServerConfig& server) {
-	std::string line, key, value, path;
+	std::string line;
 	while (std::getline(file, line)) {
 		if (line.find("}") != std::string::npos)
 			return ;
 		std::istringstream iss(line);
+		std::string key;
 		iss >> key;
 		if (key == "host") {
-			iss >> value;
-			stripSemicolon(value);
-			server.host = value;
+			std::string host;
+			iss >> host;
+			stripSemicolon(host);
+			server.host = host;
+		}
+		else if (key == "server_name") {
+			std::string serverName;
+			iss >> serverName;
+			stripSemicolon(serverName);
+			server.serverName = serverName;
 		}
 		else if (key == "port") {
-			iss >> value;
-			stripSemicolon(value);
-			server.port = stoi(value);
+			std::string port;
+			iss >> port;
+			stripSemicolon(port);
+			server.port = std::stoi(port);
 		}
 		else if (key == "max_body_size") {
-			iss >> value;
-			stripSemicolon(value);
-			server.max_body_size = std::stoi(value);
+			std::string size;
+			iss >> size;
+			stripSemicolon(size);
+			server.maxBodySize = std::stoul(size);
 		}
 		else if (key == "error_page") {
-			iss >> value >> path;
-			stripSemicolon(path);
-			server.error_page[std::stoi(value)] = path;
+			std::string code, page;
+			iss >> code >> page;
+			stripSemicolon(page);
+			server.errorPages[std::stoi(code)] = page;
 		}
 		else if (key == "location") {
 			LocationConfig location;
@@ -78,59 +95,61 @@ void Config::parseServerBlock(std::ifstream& file, ServerConfig& server) {
 	}
 }
 
-std::string makeAbsolute(const std::string& path) {
-	if (path[0] == '/')
-		return path; // al absoluut, niets te doen
-
-	char cwd[1024];
-	getcwd(cwd, sizeof(cwd));
-	return std::string(cwd) + "/" + path;
-}
-
 void Config::parseLocationBlock(std::ifstream& file, LocationConfig& location) {
-	std::string line, key, path, method, ext, code;
+	std::string line, key;
 	while (std::getline(file, line)) {
 		if (line.find("}") != std::string::npos)
 			return ;
 		std::istringstream iss(line);
 		iss >> key;
 		if (key == "methods") {
+			std::string method;
 			while (iss >> method) {
 				stripSemicolon(method);
 				location.methods.push_back(method);
 			}
 		}
 		else if (key == "root") {
+			std::string path;
 			iss >> path;
 			stripSemicolon(path);
 			location.root = makeAbsolute(path);
 		}
 		else if (key == "index") {
-			iss >> path;
-			stripSemicolon(path);
-			location.index = path;
+			std::string index;
+			iss >> index;
+			stripSemicolon(index);
+			location.index = index;
 		}
 		else if (key == "autoindex") {
-			iss >> path;
-			stripSemicolon(path);
-			location.autoindex = (path == "on");
+			std::string value;
+			iss >> value;
+			stripSemicolon(value);
+			location.autoindex = (value == "on");
 		}
 		else if (key == "upload_store") {
+			std::string path;
 			iss >> path;
 			stripSemicolon(path);
-			location.upload_store = makeAbsolute(path);
+			location.uploadStore = makeAbsolute(path);
 		}
 		else if (key == "cgi") {
-			iss >> ext >> path;
-			stripSemicolon(path);
-			location.cgi_ext = ext;
-			location.cgi_path = makeAbsolute(path);
+			std::string extension, cgiPath;
+			iss >> extension >> cgiPath;
+			stripSemicolon(cgiPath);
+			location.cgiExtensions.push_back(extension);
+			location.cgiPaths.push_back(makeAbsolute(cgiPath));
 		}
 		else if (key == "redirect") {
-			iss >> code >> path;
-			stripSemicolon(path);
-			location.redirect_code = stoi(code);
-			location.redirect_page = path;
+			std::string code, page;
+			iss >> code >> page;
+			stripSemicolon(page);
+			location.redirectCode = std::stoi(code);
+			location.redirectPage = page;
 		}
 	}
+}
+
+const std::vector<ServerConfig>& Config::getServers() const {
+	return _servers;
 }

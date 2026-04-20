@@ -13,9 +13,9 @@ Server::~Server() {}
 
 void Server::start()
 {
-	for (size_t i = 0; i < _config.GetServer().size(); i++) {
+	for (size_t i = 0; i < _config.getServers().size(); i++) {
 
-		const ServerConfig& server = _config.GetServer()[i];
+		const ServerConfig& server = _config.getServers()[i];
 
 		int serverFD = socket(AF_INET, SOCK_STREAM, 0);
 		if (serverFD < 0)
@@ -110,6 +110,8 @@ int Server::acceptClient(int serverFD) {
 		throw std::runtime_error("accept() failed");
 	}
 	std::cout << "Connection made.\n\n";
+	_numberOfConnections++;
+	std::cout << "Aantal connecties tot nu toe: " << _numberOfConnections << std::endl;
 	fcntl(clientFD, F_SETFL, O_NONBLOCK);
 	return clientFD;
 }
@@ -131,8 +133,11 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request);
-	const LocationConfig& location = getLocation(parser.getRequest());
-	RequestHandler handler(parser.getRequest(), location);
+
+	const ServerConfig& server = findServer(parser.getRequest());
+	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
+
+	RequestHandler handler(parser.getRequest(), server.errorPages, location);
 
 	buildResponse(conn, handler.getResponse());
 
@@ -166,25 +171,13 @@ bool Server::isCompleteRequest(Connection& conn) {
 	return true;
 }
 
-const LocationConfig& Server::getLocation(const HttpRequest& request) {
-	const ServerConfig* server = findServer(request);
-	const LocationConfig& location = findLocation(*server, request.getPath());
-
-	return location;
-}
-
-const ServerConfig* Server::findServer(const HttpRequest& request) {
-	const ServerConfig* server = nullptr;
-
-	for (size_t i = 0; i < _config.GetServer().size(); i++){
-		if (request.getHost() == _config.GetServer()[i].host && request.getPort() == _config.GetServer()[i].port)
-			server = &_config.GetServer()[i];
+const ServerConfig& Server::findServer(const HttpRequest& request) {
+	for (size_t i = 0; i < _config.getServers().size(); i++) {
+		if (request.getHost() == _config.getServers()[i].host &&
+			request.getPort() == _config.getServers()[i].port)
+			return _config.getServers()[i];
 	}
-
-	if (server == nullptr)
-		server = &_config.GetServer()[0];
-
-	return server;
+	return _config.getServers()[0]; // default server
 }
 
 const LocationConfig& Server::findLocation(const ServerConfig& server, const std::string& path) {
