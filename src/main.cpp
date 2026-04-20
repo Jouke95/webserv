@@ -2,12 +2,13 @@
 #include "Config.hpp"
 #include <iostream>
 
-int main(int ac, char **av)
-{
-	try
-	{
-		if (ac != 2)
-			throw std::runtime_error("Usage: ./webserv [config file]");
+int main(int ac, char **av) {
+	if (ac != 2) {
+		std::cerr << "Usage: ./webserv [config file]\n";
+		return 1;
+	}
+
+	try {
 		Config config(av[1]);
 		Server server(config);
 

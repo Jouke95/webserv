@@ -111,10 +111,12 @@ std::map<int, std::string> HttpResponse::initStatusMessages() {
 	m[403] = "Forbidden";
 	m[404] = "Not Found";
 	m[405] = "Method Not Allowed";
+	m[409] = "Conflict";
 	m[500] = "Internal Server Error";
 	m[501] = "Not Implemented";
 	m[502] = "Bad Gateway";
 	m[504] = "Gateway Timeout";
+	m[505] = "HTTP Version Not Supported";
 
 	return m;
 }

@@ -1,0 +1,4 @@
+1. CGI implementeren
+2. serveDirList() functie schrijven
+3. checken of de body niet groter is dan max_body_size
+4. testen

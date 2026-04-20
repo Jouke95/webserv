@@ -29,6 +29,7 @@ std::string ResponseBuilder::build() {
     const std::map<std::string, std::string>& headers = _response.getHeaders();
     for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it)
         response += it->first + ": " + it->second + "\r\n";
+    response += "Connection: close\r\n";
 
     // Lege regel + body
     response += "\r\n";

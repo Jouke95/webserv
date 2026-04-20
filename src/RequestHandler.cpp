@@ -4,10 +4,11 @@
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
+#include <unistd.h>
 
 RequestHandler::RequestHandler(const HttpRequest& request,
-								const std::map<int, std::string>& errorPages,
-								const LocationConfig& location)
+							   const std::map<int, std::string>& errorPages,
+							   const LocationConfig& location)
 	: _request(request),
 	  _errorPages(errorPages),
 	  _location(location)
@@ -107,21 +108,25 @@ void RequestHandler::handlePost(){
 		return;
 	}
 	std::string path = makePath(_location.uploadStore);
-	std::cout << "POST path: " << path << std::endl;
-
+	if (access(path.c_str(), F_OK) == 0) {
+		errorPage(409);
+		return;
+	}
 	std::ofstream file(path);
 	if (!file.is_open()){
 		errorPage(500);
 		return;
 	}
 	file << _request.getBody();
+	file.close();
 	_response.setStatusCode(201);
+	_response.setHeader("Location", _request.getPath());
 }
 
 void RequestHandler::handleDelete(){
-	std::string path = _location.root + _request.getPath();
+	std::string path = makePath(_location.uploadStore);
 	if (!std::filesystem::exists(path)){
-		_response.setStatusCode(404);
+		errorPage(404);
 		return;
 	}
 	try {
@@ -129,11 +134,10 @@ void RequestHandler::handleDelete(){
 		_response.setStatusCode(204);
 	} catch (const std::filesystem::filesystem_error& e) {
 		if (e.code() == std::errc::permission_denied)
-			_response.setStatusCode(403);
+			errorPage(403);
 		else
-			_response.setStatusCode(500);
+			errorPage(500);
 	}
-	return;
 }
 
 void RequestHandler::handleDirectory(std::string path) {
