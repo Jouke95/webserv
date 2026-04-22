@@ -62,12 +62,18 @@ static bool isCompressibleContentType(const std::string& contentType) {
 		|| type == "application/xml";
 }
 
+static std::string normalizedContentEncoding(const std::string& value) {
+	return lowerCopy(trimHeaderValue(value));
+}
+
 RequestHandler::RequestHandler(const HttpRequest& request,
 							   const std::map<int, std::string>& errorPages,
-							   const LocationConfig& location)
+							   const LocationConfig& location,
+							   size_t maxBodySize)
 	: _request(request),
 	  _errorPages(errorPages),
-	  _location(location)
+	  _location(location),
+	  _maxBodySize(maxBodySize)
 {
 	handle();
 }
@@ -89,6 +95,9 @@ void RequestHandler::handle() {
 		return ;
 	if (!isValidMethod())
 		return ;
+
+	if (!decodeRequestBody())
+		return;
 
 	std::string method = _request.getMethod();
 
@@ -137,6 +146,37 @@ bool RequestHandler::isValidMethod() {
 	return true;
 }
 
+bool RequestHandler::decodeRequestBody() {
+	if (_request.getBody().empty())
+		return true;
+
+	std::string encoding = normalizedContentEncoding(_request.getHeader("Content-Encoding"));
+	if (encoding.empty() || encoding == "identity")
+		return true;
+	if (encoding != "gzip") {
+		errorPage(415);
+		return false;
+	}
+
+	try {
+		std::string body = _request.getBody();
+		std::vector<uint8_t> decoded = Gzip::decompress(
+			reinterpret_cast<const uint8_t*>(body.data()), body.size());
+		if ((_maxBodySize > 0 && decoded.size() > _maxBodySize) || decoded.size() > INT_MAX) {
+			errorPage(413);
+			return false;
+		}
+		_request.setBody(std::string(
+			reinterpret_cast<const char*>(decoded.data()), decoded.size()));
+		_request.setContentLength(static_cast<int>(_request.getBody().size()));
+		return true;
+	}
+	catch (const std::exception&) {
+		errorPage(400);
+		return false;
+	}
+}
+
 std::string RequestHandler::makePath(const std::string& root) const {
 	std::string requestPath = _request.getPath();
 	std::string path = requestPath.substr(_location.path.size());
@@ -170,12 +210,12 @@ void RequestHandler::handlePost(){
 		errorPage(409);
 		return;
 	}
-	std::ofstream file(path);
+	std::ofstream file(path, std::ios::binary);
 	if (!file.is_open()){
 		errorPage(500);
 		return;
 	}
-	file << _request.getBody();
+	file.write(_request.getBody().data(), _request.getBody().size());
 	file.close();
 	_response.setStatusCode(201);
 	_response.setHeader("Location", _request.getPath());

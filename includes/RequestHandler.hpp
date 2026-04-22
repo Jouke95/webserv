@@ -11,6 +11,7 @@ class RequestHandler {
 		HttpRequest _request;
 		std::map<int, std::string> _errorPages;
 		LocationConfig _location;
+		size_t _maxBodySize;
 
 		static std::map<std::string, std::string> _mimeTypes;
 		static std::vector<std::string> _knownMethods;
@@ -23,6 +24,7 @@ class RequestHandler {
 
 		bool isValidMethod();
 		bool redirectCheck();
+		bool decodeRequestBody();
 		std::string makePath(const std::string& base) const;
 		void errorPage(int errorCode);
 		void setFallbackError();
@@ -35,7 +37,8 @@ class RequestHandler {
 	public:
 		RequestHandler(const HttpRequest& request,
 					   const std::map<int, std::string>& errorPages,
-					   const LocationConfig& location);
+					   const LocationConfig& location,
+					   size_t maxBodySize = 0);
 		~RequestHandler();
 
 		HttpResponse getResponse() const;

@@ -112,6 +112,8 @@ std::map<int, std::string> HttpResponse::initStatusMessages() {
 	m[404] = "Not Found";
 	m[405] = "Method Not Allowed";
 	m[409] = "Conflict";
+	m[413] = "Payload Too Large";
+	m[415] = "Unsupported Media Type";
 	m[500] = "Internal Server Error";
 	m[501] = "Not Implemented";
 	m[502] = "Bad Gateway";

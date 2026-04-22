@@ -139,7 +139,7 @@ bool Server::handleRequest(Connection& conn) {
 	const ServerConfig& server = findServer(parser.getRequest());
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
 
-	RequestHandler handler(parser.getRequest(), server.errorPages, location);
+	RequestHandler handler(parser.getRequest(), server.errorPages, location, server.maxBodySize);
 
 	buildResponse(conn, handler.getResponse());
 
