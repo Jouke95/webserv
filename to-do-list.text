@@ -1,4 +1,8 @@
 1. CGI implementeren
 2. serveDirList() functie schrijven
 3. checken of de body niet groter is dan max_body_size
-4. testen
+4. config file validator
+5. request validator
+6. stoi zonder try/catch fixen (parser + config)
+7. realpath path traversal check
+8. 400 terugsturen bij ongeldige Content-Length

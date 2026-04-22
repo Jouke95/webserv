@@ -13,6 +13,9 @@ Server::~Server() {}
 
 void Server::start()
 {
+	if (_config.getServers().empty())
+		throw std::runtime_error("no servers configured");
+
 	for (size_t i = 0; i < _config.getServers().size(); i++) {
 
 		const ServerConfig& server = _config.getServers()[i];
@@ -27,7 +30,7 @@ void Server::start()
 		sockaddr_in addr = createAddress(server);
 
 		if (bind(serverFD, (sockaddr*)&addr, sizeof(addr)) < 0)
-			throw std::runtime_error("bind() failed");
+			throw std::runtime_error("bind() failed on " + server.host + ":" + std::to_string(server.port));
 
 		if (listen(serverFD, 10) < 0)
 			throw std::runtime_error("listen() failed");
@@ -50,7 +53,7 @@ sockaddr_in Server::createAddress(const ServerConfig& server) {
 void Server::run()
 {
 	while (true) {
-		myPoll();
+		pollConnections();
 		for (size_t i = 0; i < _connections.size(); i++)
 			handleConnection(i);
 	}
@@ -109,10 +112,9 @@ int Server::acceptClient(int serverFD) {
 			return -1;
 		throw std::runtime_error("accept() failed");
 	}
-	std::cout << "Connection made.\n\n";
-	_numberOfConnections++;
-	std::cout << "Aantal connecties tot nu toe: " << _numberOfConnections << std::endl;
 	fcntl(clientFD, F_SETFL, O_NONBLOCK);
+	_numberOfConnections++;
+	std::cout << "New connection (#" << _numberOfConnections << ")\n";
 	return clientFD;
 }
 
@@ -164,8 +166,17 @@ bool Server::isCompleteRequest(Connection& conn) {
 	size_t pos = request.find("Content-Length");
 	if (pos != std::string::npos) {
 		pos += CONTENT_LENGTH_PREFIX;
-		size_t contentLength = stoi(request.substr(pos));
-		if (request.size() - (headerEnd + HEADER_END_LEN) < contentLength)
+		int contentLength;
+		try {
+			contentLength = stoi(request.substr(pos));
+		}
+		catch (std::exception &e) {
+			return true;	// invalid Content-Length, let the handler deal with it
+		}
+		if (contentLength < 0)
+			return true;	// invalid Content-Length, let the handler deal with it
+
+		if (request.size() - (headerEnd + HEADER_END_LEN) < (size_t)contentLength)
 			return false;
 	}
 	return true;
@@ -177,22 +188,27 @@ const ServerConfig& Server::findServer(const HttpRequest& request) {
 			request.getPort() == _config.getServers()[i].port)
 			return _config.getServers()[i];
 	}
-	return _config.getServers()[0]; // default server
+	return _config.getServers()[0];	// default server
 }
 
-const LocationConfig& Server::findLocation(const ServerConfig& server, const std::string& path) {
+const LocationConfig& Server::findLocation(const ServerConfig& server, const std::string& requestPath) {
 	size_t	bestMatchLen = 0;
 	int		bestMatchIdx = 0;
 
-	for (size_t i = 0; i < server.locations.size(); i++){
+	for (size_t i = 0; i < server.locations.size(); i++) {
 		const std::string& locPath = server.locations[i].path;
-		if (path.substr(0, locPath.size()) == locPath && (locPath.size() == path.size() || path[locPath.size()] == '/')) {
+
+		bool prefixMatch = requestPath.substr(0, locPath.size()) == locPath;
+		bool exactOrSlash = (locPath.size() == requestPath.size() || requestPath[locPath.size()] == '/' || locPath.back() == '/');
+
+		if (prefixMatch && exactOrSlash) {
 			if (locPath.size() > bestMatchLen) {
 				bestMatchLen = locPath.size();
 				bestMatchIdx = i;
 			}
 		}
 	}
+
 	return server.locations[bestMatchIdx];
 }
 
@@ -211,19 +227,18 @@ bool Server::sendResponse(Connection &conn) {
 		return true;
 
 	bytesSent += bytes;
-	if (bytesSent < (ssize_t)response.size())
-		return false;
 
-	return true;
+	return bytesSent == (ssize_t)response.size(); // true = done
 }
 
-void Server::myPoll() {
+void Server::pollConnections() {
+	// poll() requires a flat array, so we copy the pfds in and back out
 	std::vector<pollfd> fds;
 
 	for (size_t i = 0; i < _connections.size(); i++)
 		fds.push_back(_connections[i].pfd);
 
-	poll(fds.data(), fds.size(), -1);
+	poll(fds.data(), fds.size(), 1000);
 
 	for (size_t i = 0; i < _connections.size(); i++)
 		_connections[i].pfd.revents = fds[i].revents;

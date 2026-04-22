@@ -31,7 +31,7 @@ class Server {
 		int _numberOfConnections = 0;
 
 		// Methods
-		void		myPoll();
+		void		pollConnections();
 		sockaddr_in	createAddress(const ServerConfig& server);
 		void		handleConnection(size_t &i);
 		bool		isTimedOut(Connection& conn);
