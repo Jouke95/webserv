@@ -1,6 +1,7 @@
 #ifndef HTTPREQUEST_HPP
 #define HTTPREQUEST_HPP
 
+#include <map>
 #include <string>
 
 class HttpRequest {
@@ -15,6 +16,7 @@ class HttpRequest {
 		std::string	_userAgent;
 		std::string	_connection;
 		std::string	_body;
+		std::map<std::string, std::string> _headers;
 
 	public:
 		HttpRequest();
@@ -32,6 +34,7 @@ class HttpRequest {
 		void		setUserAgent(const std::string& userAgent);
 		void		setConnection(const std::string& connection);
 		void		setBody(const std::string& body);
+		void		setHeader(const std::string& key, const std::string& value);
 
 		const std::string&	getMethod() const;
 		const std::string&	getPath() const;
@@ -43,6 +46,8 @@ class HttpRequest {
 		const std::string&	getUserAgent() const;
 		const std::string&	getConnection() const;
 		const std::string&	getBody() const;
+		std::string			getHeader(const std::string& key) const;
+		bool				hasHeaderToken(const std::string& key, const std::string& token) const;
 };
 
 #endif

@@ -29,6 +29,8 @@ class RequestHandler {
 		void serveFile(const std::string& path);
 		void handleDirectory(std::string path);
 		std::string getContentType(const std::string& path);
+		bool shouldGzipResponse() const;
+		void applyGzip();
 
 	public:
 		RequestHandler(const HttpRequest& request,

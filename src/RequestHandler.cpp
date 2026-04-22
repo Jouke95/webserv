@@ -1,10 +1,66 @@
 #include "RequestHandler.hpp"
+#include "gzip/Gzip.hpp"
+#include <algorithm>
+#include <cctype>
+#include <climits>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 #include <sys/stat.h>
 #include <unistd.h>
+
+static std::string lowerCopy(const std::string& value) {
+	std::string lower = value;
+	std::transform(lower.begin(), lower.end(), lower.begin(),
+		[](unsigned char c) { return std::tolower(c); });
+	return lower;
+}
+
+static std::string trimHeaderValue(const std::string& value) {
+	size_t start = value.find_first_not_of(" \t");
+	if (start == std::string::npos)
+		return "";
+	size_t end = value.find_last_not_of(" \t");
+	return value.substr(start, end - start + 1);
+}
+
+static bool startsWith(const std::string& value, const std::string& prefix) {
+	return value.size() >= prefix.size() && value.compare(0, prefix.size(), prefix) == 0;
+}
+
+static bool hasHeaderToken(const std::string& value, const std::string& token) {
+	std::string wanted = lowerCopy(token);
+	size_t pos = 0;
+
+	while (pos < value.size()) {
+		size_t comma = value.find(',', pos);
+		std::string part = value.substr(pos, comma - pos);
+		size_t semicolon = part.find(';');
+		std::string name = lowerCopy(trimHeaderValue(part.substr(0, semicolon)));
+		if (name == wanted)
+			return true;
+		if (comma == std::string::npos)
+			break;
+		pos = comma + 1;
+	}
+	return false;
+}
+
+static bool isCompressibleContentType(const std::string& contentType) {
+	std::string type = lowerCopy(contentType);
+	size_t semicolon = type.find(';');
+	if (semicolon != std::string::npos)
+		type = type.substr(0, semicolon);
+	type = trimHeaderValue(type);
+
+	return startsWith(type, "text/")
+		|| type == "application/javascript"
+		|| type == "application/json"
+		|| type == "application/xml";
+}
 
 RequestHandler::RequestHandler(const HttpRequest& request,
 							   const std::map<int, std::string>& errorPages,
@@ -42,6 +98,8 @@ void RequestHandler::handle() {
 		handlePost();
 	else if (method == "DELETE")
 		handleDelete();
+
+	applyGzip();
 }
 
 bool RequestHandler::redirectCheck() {
@@ -157,7 +215,7 @@ void RequestHandler::handleDirectory(std::string path) {
 }
 
 void RequestHandler::serveFile(const std::string& path) {
-	std::ifstream file(path);
+	std::ifstream file(path, std::ios::binary);
 	if (!file.is_open()) {
 		struct stat info;
 		if (stat(path.c_str(), &info) == -1)
@@ -172,6 +230,53 @@ void RequestHandler::serveFile(const std::string& path) {
 	_response.setContentLength(body.size());
 	_response.setStatusCode(200);
 	_response.setContentType(getContentType(path));
+}
+
+bool RequestHandler::shouldGzipResponse() const {
+	if (_request.getMethod() != "GET")
+		return false;
+	if (!_request.hasHeaderToken("Accept-Encoding", "gzip"))
+		return false;
+	if (_response.getStatusCode() != 200)
+		return false;
+	if (_response.getBody().empty())
+		return false;
+	if (!isCompressibleContentType(_response.getContentType()))
+		return false;
+
+	const std::map<std::string, std::string>& headers = _response.getHeaders();
+	if (headers.find("Content-Encoding") != headers.end())
+		return false;
+	return true;
+}
+
+void RequestHandler::applyGzip() {
+	if (!shouldGzipResponse())
+		return;
+
+	std::string body = _response.getBody();
+	try {
+		std::vector<uint8_t> compressed = Gzip::compress(
+			reinterpret_cast<const uint8_t*>(body.data()), body.size());
+		if (compressed.size() > INT_MAX)
+			return;
+
+		std::string compressedBody(
+			reinterpret_cast<const char*>(compressed.data()), compressed.size());
+		_response.setBody(compressedBody);
+		_response.setContentLength(static_cast<int>(compressedBody.size()));
+		_response.setHeader("Content-Encoding", "gzip");
+
+		const std::map<std::string, std::string>& headers = _response.getHeaders();
+		std::map<std::string, std::string>::const_iterator vary = headers.find("Vary");
+		if (vary == headers.end())
+			_response.setHeader("Vary", "Accept-Encoding");
+		else if (!hasHeaderToken(vary->second, "Accept-Encoding"))
+			_response.setHeader("Vary", vary->second + ", Accept-Encoding");
+	}
+	catch (const std::exception&) {
+		return;
+	}
 }
 
 std::string RequestHandler::getContentType(const std::string& path) {
@@ -197,7 +302,7 @@ void RequestHandler::errorPage(int errorCode) {
 	}
 	std::string path = it->second;
 
-	std::ifstream file(path);
+	std::ifstream file(path, std::ios::binary);
 	if (!file.is_open()) {
 		setFallbackError();
 		return;

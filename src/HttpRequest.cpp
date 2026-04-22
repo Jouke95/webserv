@@ -1,4 +1,40 @@
 #include <HttpRequest.hpp>
+#include <algorithm>
+#include <cctype>
+
+static std::string toLower(const std::string& value) {
+	std::string lower = value;
+	std::transform(lower.begin(), lower.end(), lower.begin(),
+		[](unsigned char c) { return std::tolower(c); });
+	return lower;
+}
+
+static std::string trim(const std::string& value) {
+	size_t start = value.find_first_not_of(" \t");
+	if (start == std::string::npos)
+		return "";
+	size_t end = value.find_last_not_of(" \t");
+	return value.substr(start, end - start + 1);
+}
+
+static bool tokenIsAllowed(const std::string& params) {
+	size_t pos = 0;
+	while (pos < params.size()) {
+		size_t semicolon = params.find(';', pos);
+		std::string param = params.substr(pos, semicolon - pos);
+		size_t equals = param.find('=');
+		if (equals != std::string::npos) {
+			std::string name = toLower(trim(param.substr(0, equals)));
+			std::string value = trim(param.substr(equals + 1));
+			if (name == "q" && (value == "0" || value == "0.0" || value == "0.00" || value == "0.000"))
+				return false;
+		}
+		if (semicolon == std::string::npos)
+			break;
+		pos = semicolon + 1;
+	}
+	return true;
+}
 
 HttpRequest::HttpRequest() : _contentLength(0) {}
 
@@ -21,6 +57,7 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other) {
 		_userAgent = other._userAgent;
 		_connection = other._connection;
 		_body = other._body;
+		_headers = other._headers;
 	}
 	return (*this);
 }
@@ -65,6 +102,9 @@ void HttpRequest::setVersion(const std::string& version) {
 	_version = version;
 }
 
+void HttpRequest::setHeader(const std::string& key, const std::string& value) {
+	_headers[toLower(key)] = value;
+}
 
 const std::string& HttpRequest::getMethod() const {
 	return _method;
@@ -104,4 +144,35 @@ const std::string& HttpRequest::getVersion() const {
 
 int HttpRequest::getContentLength() const {
 	return _contentLength;
+}
+
+std::string HttpRequest::getHeader(const std::string& key) const {
+	std::map<std::string, std::string>::const_iterator it = _headers.find(toLower(key));
+	if (it == _headers.end())
+		return "";
+	return it->second;
+}
+
+bool HttpRequest::hasHeaderToken(const std::string& key, const std::string& token) const {
+	std::string value = getHeader(key);
+	std::string wanted = toLower(token);
+	size_t pos = 0;
+
+	while (pos < value.size()) {
+		size_t comma = value.find(',', pos);
+		std::string part = value.substr(pos, comma - pos);
+		size_t semicolon = part.find(';');
+		std::string name = toLower(trim(part.substr(0, semicolon)));
+
+		if (name == wanted) {
+			std::string params;
+			if (semicolon != std::string::npos)
+				params = part.substr(semicolon + 1);
+			return tokenIsAllowed(params);
+		}
+		if (comma == std::string::npos)
+			break;
+		pos = comma + 1;
+	}
+	return false;
 }

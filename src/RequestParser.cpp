@@ -49,6 +49,7 @@ void RequestParser::parseHeaders(std::istringstream& stream) {
 		if (!parseHeaderLine(line, key, value))
 			continue;
 
+		_httpRequest.setHeader(key, value);
 		if (key == "Host")
 			parseHostLine(value);
 		else if (key == "Content-Type")
