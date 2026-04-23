@@ -4,6 +4,10 @@
 #include <stdexcept>
 
 int strToInt(const std::string& str) {
+	for (size_t i = 0; i < str.size(); i++) {
+		if (!isdigit(str[i]))
+			return -1;
+	}
 	try {
 		return std::stoi(str);
 	} catch (std::exception& e) {
@@ -12,6 +16,10 @@ int strToInt(const std::string& str) {
 }
 
 size_t strToSizeT(const std::string& str) {
+	for (size_t i = 0; i < str.size(); i++) {
+		if (!isdigit(str[i]))
+			return std::string::npos;
+	}
 	try {
 		return std::stoul(str);
 	} catch (std::exception& e) {

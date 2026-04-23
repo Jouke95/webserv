@@ -14,8 +14,6 @@ class RequestHandler {
 		size_t _maxBodySize;
 
 		static std::map<std::string, std::string> _mimeTypes;
-		static std::vector<std::string> _knownMethods;
-		static std::vector<std::string> _implementedMethods;
 
 		void handle();
 		void handleGet();

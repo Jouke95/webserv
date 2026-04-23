@@ -95,14 +95,8 @@ HttpResponse RequestHandler::getResponse() const {
 
 void RequestHandler::handle() {
 	_response.setVersion("HTTP/1.1");
-	if (_request.getVersion() != "HTTP/1.1") {
-		errorPage(505); // HTTP Version Not Supported
-		return;
-	}
 
 	if (redirectCheck())
-		return;
-	if (!isValidMethod())
 		return;
 
 	if (!decodeRequestBody())
@@ -127,24 +121,6 @@ bool RequestHandler::redirectCheck() {
 		return true;
 	}
 	return false;
-}
-
-bool RequestHandler::isValidMethod() {
-	std::string method = _request.getMethod();
-
-	if (!vectorContains(_knownMethods, method)) {
-		_response.setStatusCode(400);
-		return false;
-	}
-	if (!vectorContains(_implementedMethods, method)) {
-		_response.setStatusCode(501);
-		return false;
-	}
-	if (!vectorContains(_location.methods, method)) {
-		_response.setStatusCode(405);
-		return false;
-	}
-	return true;
 }
 
 bool RequestHandler::decodeRequestBody() {
@@ -399,13 +375,4 @@ std::map<std::string, std::string> RequestHandler::_mimeTypes = {
 	{"png",  "image/png"},
 	{"css",  "text/css"},
 	{"js",   "application/javascript"}
-};
-
-std::vector<std::string> RequestHandler::_knownMethods = {
-	"GET", "HEAD", "OPTIONS", "TRACE",
-	"PUT", "DELETE", "POST", "PATCH", "CONNECT"
-};
-
-std::vector<std::string> RequestHandler::_implementedMethods = {
-	"GET", "POST", "DELETE"
 };

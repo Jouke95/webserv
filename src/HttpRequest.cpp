@@ -36,7 +36,7 @@ static bool tokenIsAllowed(const std::string& params) {
 	return true;
 }
 
-HttpRequest::HttpRequest() : _contentLength(0) {}
+HttpRequest::HttpRequest() : _port(-1), _contentLength(0) {}
 
 HttpRequest::~HttpRequest()
 = default;

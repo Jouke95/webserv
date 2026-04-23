@@ -3,15 +3,24 @@
 
 #include "Config.hpp"
 #include "HttpRequest.hpp"
+#include <vector>
+#include <string>
 
 class RequestValidator {
 	private:
-		bool _isValid;
-		int _errorCode;
-
 		const HttpRequest& _request;
 		const ServerConfig& _server;
 		const LocationConfig& _location;
+		bool _isValid;
+		int _errorCode;
+	
+		bool isValidVersion();
+		bool isValidHostHeader();
+		bool isValidMethod();
+		bool isValidContentLength();
+
+		static std::vector<std::string> _knownMethods;
+		static std::vector<std::string> _implementedMethods;
 
 	public:
 		RequestValidator(const HttpRequest& request, const ServerConfig& server, const LocationConfig& location);
