@@ -40,6 +40,7 @@ class RequestHandler {
 					   const std::map<int, std::string>& errorPages,
 					   const LocationConfig& location,
 					   size_t maxBodySize = 0);
+		RequestHandler(const std::map<int, std::string>& errorPages, int errorCode);
 		~RequestHandler();
 
 		HttpResponse getResponse() const;

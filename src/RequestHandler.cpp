@@ -80,6 +80,13 @@ RequestHandler::RequestHandler(const HttpRequest& request,
 	handle();
 }
 
+RequestHandler::RequestHandler(const std::map<int, std::string>& errorPages, int errorCode) 
+	: _errorPages(errorPages)
+{
+	_response.setVersion("HTTP/1.1");
+	errorPage(errorCode);
+}
+
 RequestHandler::~RequestHandler() {}
 
 HttpResponse RequestHandler::getResponse() const {

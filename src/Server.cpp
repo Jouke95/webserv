@@ -5,6 +5,7 @@
 #include "RequestParser.hpp"
 #include "ResponseBuilder.hpp"
 #include "RequestHandler.hpp"
+#include "RequestValidator.hpp"
 #include "Server.hpp"
 #include "utils.hpp"
 
@@ -137,14 +138,20 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request);
-
+	
 	const ServerConfig& server = findServer(parser.getRequest());
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
+	
+	RequestValidator requestValidator(parser.getRequest(), server, location);
+
+	if (!requestValidator.isValid()) {
+		RequestHandler errorHandler(server.errorPages, requestValidator.errorCode());
+		buildResponse(conn, errorHandler.getResponse());
+		return true;
+	}
 
 	RequestHandler handler(parser.getRequest(), server.errorPages, location, server.maxBodySize);
-
 	buildResponse(conn, handler.getResponse());
-
 	return true;
 }
 

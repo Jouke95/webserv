@@ -10,7 +10,7 @@ int main(int ac, char **av) {
 
 	try {
 		Config config(av[1]);
-		ConfigValidator configVal(config);
+		// ConfigValidator configVal(config);
 		Server server(config);
 
 		server.start();
