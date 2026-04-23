@@ -2,10 +2,12 @@
 #include <stdexcept>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "Server.hpp"
 #include "RequestParser.hpp"
 #include "ResponseBuilder.hpp"
 #include "RequestHandler.hpp"
+#include "Server.hpp"
+#include "utils.hpp"
+
 
 Server::Server(const Config& config) : _config(config) {}
 
@@ -166,13 +168,7 @@ bool Server::isCompleteRequest(Connection& conn) {
 	size_t pos = request.find("Content-Length");
 	if (pos != std::string::npos) {
 		pos += CONTENT_LENGTH_PREFIX;
-		int contentLength;
-		try {
-			contentLength = stoi(request.substr(pos));
-		}
-		catch (std::exception &e) {
-			return true;	// invalid Content-Length, let the handler deal with it
-		}
+		int contentLength = strToInt(request.substr(pos));
 		if (contentLength < 0)
 			return true;	// invalid Content-Length, let the handler deal with it
 

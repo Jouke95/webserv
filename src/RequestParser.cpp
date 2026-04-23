@@ -1,11 +1,7 @@
 #include "RequestParser.hpp"
+#include "utils.hpp"
 #include <iostream>
 #include <sstream>
-
-static void stripCR(std::string& line) {
-	if (!line.empty() && line.back() == '\r')
-		line.pop_back();
-}
 
 RequestParser::RequestParser(const std::string& request) : _requestString(request) {
 	parse();
@@ -55,7 +51,7 @@ void RequestParser::parseHeaders(std::istringstream& stream) {
 		else if (key == "Content-Type")
 			_httpRequest.setContentType(value);
 		else if (key == "Content-Length")
-			_httpRequest.setContentLength(std::stoi(value));
+			_httpRequest.setContentLength(strToInt(value));
 		else if (key == "User-Agent")
 			_httpRequest.setUserAgent(value);
 		else if (key == "Connection")
@@ -94,7 +90,7 @@ void RequestParser::parseHostLine(const std::string& line) {
 	}
 	else {
 		host = line.substr(0, hostColon);
-		port = stoi(line.substr(hostColon + 1));
+		port = strToInt(line.substr(hostColon + 1));
 	}
 
 	if (host == "localhost")

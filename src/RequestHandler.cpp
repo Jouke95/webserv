@@ -11,6 +11,7 @@
 #include <vector>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "utils.hpp"
 
 static std::string lowerCopy(const std::string& value) {
 	std::string lower = value;
@@ -92,9 +93,9 @@ void RequestHandler::handle() {
 	}
 
 	if (redirectCheck())
-		return ;
+		return;
 	if (!isValidMethod())
-		return ;
+		return;
 
 	if (!decodeRequestBody())
 		return;
@@ -116,14 +117,6 @@ bool RequestHandler::redirectCheck() {
 		_response.setHeader("Location", _location.redirectPage);
 		_response.setStatusCode(_location.redirectCode);
 		return true;
-	}
-	return false;
-}
-
-static bool vectorContains(const std::vector<std::string>& vec, const std::string& value) {
-	for (size_t i = 0; i < vec.size(); i++) {
-		if (vec[i] == value)
-			return true;
 	}
 	return false;
 }

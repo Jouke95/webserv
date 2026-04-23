@@ -1,9 +1,10 @@
-#include "Config.hpp"
 #include <climits>
 #include <fstream>
 #include <stdexcept>
 #include <sstream>
 #include <unistd.h>
+#include "Config.hpp"
+#include "utils.hpp"
 
 Config::Config(const std::string& path) {
 	std::string line;
@@ -33,21 +34,6 @@ Config& Config::operator=(const Config& other) {
 
 Config::~Config() {}
 
-static void stripSemicolon(std::string& value) {
-	if (!value.empty() && value.back() == ';')
-		value.pop_back();
-}
-
-static std::string makeAbsolute(const std::string& path) {
-	if (path.empty() || path[0] == '/')
-		return path;
-
-	char cwd[PATH_MAX];
-	if (!getcwd(cwd, sizeof(cwd)))
-		throw std::runtime_error("getcwd failed");
-	return std::string(cwd) + "/" + path;
-}
-
 void Config::parseServerBlock(std::ifstream& file, ServerConfig& server) {
 	std::string line;
 	while (std::getline(file, line)) {
@@ -72,19 +58,19 @@ void Config::parseServerBlock(std::ifstream& file, ServerConfig& server) {
 			std::string port;
 			iss >> port;
 			stripSemicolon(port);
-			server.port = std::stoi(port);
+			server.port = strToInt(port);
 		}
 		else if (key == "max_body_size") {
 			std::string size;
 			iss >> size;
 			stripSemicolon(size);
-			server.maxBodySize = std::stoul(size);
+			server.maxBodySize = strToSizeT(size);
 		}
 		else if (key == "error_page") {
 			std::string code, page;
 			iss >> code >> page;
 			stripSemicolon(page);
-			server.errorPages[std::stoi(code)] = page;
+			server.errorPages[strToInt(code)] = page;
 		}
 		else if (key == "location") {
 			LocationConfig location;
@@ -144,7 +130,7 @@ void Config::parseLocationBlock(std::ifstream& file, LocationConfig& location) {
 			std::string code, page;
 			iss >> code >> page;
 			stripSemicolon(page);
-			location.redirectCode = std::stoi(code);
+			location.redirectCode = strToInt(code);
 			location.redirectPage = page;
 		}
 	}
