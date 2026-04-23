@@ -47,6 +47,7 @@ void HttpResponse::setContentType(const std::string& contentType) {
 }
 
 void HttpResponse::setBody(const std::string& body) {
+		void serveDirList();
 	_body = body;
 }
 

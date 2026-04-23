@@ -1,8 +1,10 @@
 1. CGI implementeren
 
-2. serveDirList() functie schrijven
-4. config file validator
 
-5. request validator (3. checken of de body niet groter is dan max_body_size) (7. 400 terugsturen bij ongeldige Content-Length)
 
-6. realpath path traversal check
+3. config file validator
+- check dat auto index alleen in de
+
+4. request validator (3. checken of de body niet groter is dan max_body_size) (7. 400 terugsturen bij ongeldige Content-Length)
+
+5. realpath path traversal check

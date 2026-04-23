@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include "utils.hpp"
@@ -238,13 +239,43 @@ void RequestHandler::handleDirectory(std::string path) {
 		path += _location.index;
 		serveFile(path);
 	}
-	else if (_location.autoindex) {
-		// implement: serve directory listing
-		// serveDirList();
-		std::cout << "Dit is even een test om te checken of hij hier idd uit komt" << std::endl;
-	}
+	else if (_location.autoindex)
+		serveDirList(path);
 	else
 		errorPage(403);
+}
+
+void RequestHandler::serveDirList(std::string path){
+	DIR *directory = opendir(path.c_str());
+	if (directory == NULL) {
+		errorPage(500);
+		return;
+	}
+	std::vector<std::string> dirs;
+	std::vector<std::string> files;
+
+	dirent *entry;
+	while ((entry = readdir(directory)) != NULL) {
+		std::string name = entry->d_name;
+		if (name == "." || name == "..")
+			continue;
+		if (entry->d_type == DT_DIR)
+			dirs.push_back(name + "/");
+		else
+			files.push_back(name);
+	}
+
+	std::string html;
+	for (size_t i = 0; i < dirs.size(); i++) {
+		html += dirs[i] + "\n";
+	}
+	for (size_t i = 0; i < files.size(); i++) {
+		html += files[i] + "\n";
+	}
+
+	_response.setBody(html);
+	_response.setContentLength(html.size());
+	_response.setStatusCode(200);
 }
 
 void RequestHandler::serveFile(const std::string& path) {
@@ -327,7 +358,7 @@ std::string RequestHandler::getContentType(const std::string& path) {
 
 void RequestHandler::errorPage(int errorCode) {
 	_response.setStatusCode(errorCode);
-	
+
 	std::map<int, std::string>::iterator it = _errorPages.find(errorCode);
 	if (it == _errorPages.end()) {
 		setFallbackError();
