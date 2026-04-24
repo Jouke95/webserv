@@ -13,10 +13,14 @@ RequestValidator::RequestValidator(const HttpRequest& request, const ServerConfi
 		return;
 	if (!isValidHostHeader())
 		return;
+	if (!isValidPath())
+		return;
 	if (!isValidMethod())
 		return;
 	if (_request.getMethod() == "POST") {
 		if (!isValidContentLength())
+			return;
+		if (!isValidContentType())
 			return;
 	}
 }
@@ -45,6 +49,16 @@ bool RequestValidator::isValidHostHeader() {
 		return false;
 	}
 	if (_request.getPort() < 0 || _request.getPort() > 65535) {
+		_errorCode = 400;
+		_isValid = false;
+		return false;
+	}
+	return true;
+}
+
+bool RequestValidator::isValidPath() {
+	const std::string& path = _request.getPath();
+	if (path.empty() || path[0] != '/') {
 		_errorCode = 400;
 		_isValid = false;
 		return false;
@@ -84,6 +98,15 @@ bool RequestValidator::isValidContentLength() {
 	}
 	if (contentLength >= 0 && (size_t)contentLength > _server.maxBodySize) {
 		_errorCode = 413;
+		_isValid = false;
+		return false;
+	}
+	return true;
+}
+
+bool RequestValidator::isValidContentType() {
+	if (_request.getContentType().empty()) {
+		_errorCode = 400;
 		_isValid = false;
 		return false;
 	}

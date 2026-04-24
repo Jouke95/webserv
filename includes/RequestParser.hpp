@@ -25,6 +25,8 @@ class RequestParser {
 		RequestParser& operator=(const RequestParser& other) = delete;
 
 		const HttpRequest& getRequest() const;
+
+		void printRequest() const;
 };
 
 #endif

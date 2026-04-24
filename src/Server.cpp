@@ -138,6 +138,7 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request);
+	// parser.printRequest();
 	
 	const ServerConfig& server = findServer(parser.getRequest());
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
@@ -175,7 +176,9 @@ bool Server::isCompleteRequest(Connection& conn) {
 	size_t pos = request.find("Content-Length");
 	if (pos != std::string::npos) {
 		pos += CONTENT_LENGTH_PREFIX;
-		int contentLength = strToInt(request.substr(pos));
+		size_t lineEnd = request.find("\r\n", pos);
+		std::string lengthStr = request.substr(pos, lineEnd - pos);
+		int contentLength = strToInt(lengthStr);
 		if (contentLength < 0)
 			return true;	// invalid Content-Length, let the handler deal with it
 

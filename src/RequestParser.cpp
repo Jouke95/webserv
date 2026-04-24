@@ -103,3 +103,32 @@ void RequestParser::parseHostLine(const std::string& line) {
 const HttpRequest& RequestParser::getRequest() const {
 	return _httpRequest;
 }
+
+void RequestParser::printRequest() const {
+	const HttpRequest& req = _httpRequest;
+
+	std::cout << "=== HTTP Request ===\n";
+	std::cout << "Method:         " << req.getMethod() << "\n";
+	std::cout << "Path:           " << req.getPath() << "\n";
+	std::cout << "Version:        " << req.getVersion() << "\n";
+	std::cout << "Host:           " << req.getHost() << "\n";
+	std::cout << "Port:           " << req.getPort() << "\n";
+	std::cout << "Content-Type:   " << req.getContentType() << "\n";
+	std::cout << "Content-Length: " << req.getContentLength() << "\n";
+	std::cout << "User-Agent:     " << req.getUserAgent() << "\n";
+	std::cout << "Connection:     " << req.getConnection() << "\n";
+
+	std::cout << "--- All Headers ---\n";
+	const std::map<std::string, std::string>& headers = req.getHeaders();
+	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it)
+		std::cout << "  " << it->first << ": " << it->second << "\n";
+
+	std::cout << "--- Body ---\n";
+	const std::string& body = req.getBody();
+	if (body.empty())
+		std::cout << "  (empty)\n";
+	else
+		std::cout << body << "\n";
+
+	std::cout << "====================\n";
+}

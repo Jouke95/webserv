@@ -176,3 +176,7 @@ bool HttpRequest::hasHeaderToken(const std::string& key, const std::string& toke
 	}
 	return false;
 }
+
+const std::map<std::string, std::string>& HttpRequest::getHeaders() const {
+	return _headers;
+}

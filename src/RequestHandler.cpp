@@ -248,17 +248,19 @@ void RequestHandler::serveDirList(std::string path){
 			files.push_back(name);
 	}
 
-	std::string html;
-	for (size_t i = 0; i < dirs.size(); i++) {
-		html += dirs[i] + "\n";
-	}
-	for (size_t i = 0; i < files.size(); i++) {
-		html += files[i] + "\n";
-	}
+	std::string html = "<html><body><h1>Index of " + path + "</h1><hr><ul>";
+
+	for (size_t i = 0; i < dirs.size(); i++)
+		html += "<li><a href=\"" + dirs[i] + "\">" + dirs[i] + "</a></li>";
+	for (size_t i = 0; i < files.size(); i++)
+		html += "<li><a href=\"" + files[i] + "\">" + files[i] + "</a></li>";
+
+	html += "</ul><hr></body></html>";
 
 	_response.setBody(html);
 	_response.setContentLength(html.size());
 	_response.setStatusCode(200);
+	_response.setContentType("text/html");
 }
 
 void RequestHandler::serveFile(const std::string& path) {

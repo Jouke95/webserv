@@ -48,6 +48,8 @@ class HttpRequest {
 		const std::string&	getBody() const;
 		std::string			getHeader(const std::string& key) const;
 		bool				hasHeaderToken(const std::string& key, const std::string& token) const;
+
+		const std::map<std::string, std::string>& getHeaders() const;
 };
 
 #endif

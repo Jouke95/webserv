@@ -16,8 +16,10 @@ class RequestValidator {
 	
 		bool isValidVersion();
 		bool isValidHostHeader();
+		bool isValidPath();
 		bool isValidMethod();
 		bool isValidContentLength();
+		bool isValidContentType();
 
 		static std::vector<std::string> _knownMethods;
 		static std::vector<std::string> _implementedMethods;
@@ -26,8 +28,6 @@ class RequestValidator {
 		RequestValidator(const HttpRequest& request, const ServerConfig& server, const LocationConfig& location);
 		bool isValid() const;
 		int errorCode() const;
-
-
 };
 
 #endif
