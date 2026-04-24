@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Config.hpp"
+#include "ConfigValidator.hpp"
 #include <iostream>
 
 int main(int ac, char **av) {

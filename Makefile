@@ -7,6 +7,7 @@ SRCS = src/main.cpp src/RequestParser.cpp src/Server.cpp src/HttpRequest.cpp src
 	   src/Client.cpp src/Config.cpp src/ResponseBuilder.cpp src/RequestHandler.cpp \
 	   src/gzip/DeflateCompress.cpp src/gzip/DeflateDecompress.cpp src/gzip/Gzip.cpp src/gzip/Huffman.cpp src/gzip/LZ77.cpp \
 	   src/utils.cpp src/RequestValidator.cpp
+	   src/utils.cpp src/ConfigValidator.cpp
 
 OBJ_DIR = obj
 

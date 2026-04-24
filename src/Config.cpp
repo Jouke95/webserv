@@ -48,12 +48,6 @@ void Config::parseServerBlock(std::ifstream& file, ServerConfig& server) {
 			stripSemicolon(host);
 			server.host = host;
 		}
-		else if (key == "server_name") {
-			std::string serverName;
-			iss >> serverName;
-			stripSemicolon(serverName);
-			server.serverName = serverName;
-		}
 		else if (key == "port") {
 			std::string port;
 			iss >> port;
