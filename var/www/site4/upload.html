@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>UPLOAD — WEBSERV_SYS</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+		:root {
+			--green: #00ff41;
+			--green-dim: #00aa2a;
+			--green-glow: rgba(0, 255, 65, 0.15);
+			--bg: #000300;
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+
+		body {
+			background: var(--bg);
+			color: var(--green);
+			font-family: 'Share Tech Mono', monospace;
+			min-height: 100vh;
+			overflow-x: hidden;
+			cursor: crosshair;
+		}
+
+		body::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: repeating-linear-gradient(
+				0deg,
+				transparent,
+				transparent 2px,
+				rgba(0, 0, 0, 0.15) 2px,
+				rgba(0, 0, 0, 0.15) 4px
+			);
+			pointer-events: none;
+			z-index: 100;
+		}
+
+		body::after {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.8) 100%);
+			pointer-events: none;
+			z-index: 99;
+		}
+
+		.screen {
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 3rem 2rem;
+		}
+
+		.nav {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 2rem;
+			font-size: 0.75rem;
+			color: var(--green-dim);
+		}
+
+		.nav a {
+			color: var(--green);
+			text-decoration: none;
+		}
+
+		.nav a:hover { text-shadow: 0 0 8px var(--green); }
+
+		hr {
+			border: none;
+			border-top: 1px solid var(--green-dim);
+			margin: 1.5rem 0;
+		}
+
+		h1 {
+			font-size: 1.5rem;
+			letter-spacing: 0.1em;
+			text-shadow: 0 0 10px var(--green);
+			margin-bottom: 0.5rem;
+		}
+
+		.desc {
+			font-size: 0.75rem;
+			color: var(--green-dim);
+			margin-bottom: 2rem;
+		}
+
+		.field-label {
+			font-size: 0.7rem;
+			color: var(--green-dim);
+			letter-spacing: 0.1em;
+			margin-bottom: 0.5rem;
+		}
+
+		.field {
+			margin-bottom: 1.5rem;
+		}
+
+		input[type="text"] {
+			width: 100%;
+			background: transparent;
+			border: 1px solid var(--green-dim);
+			color: var(--green);
+			font-family: 'Share Tech Mono', monospace;
+			font-size: 0.9rem;
+			padding: 0.6rem 0.75rem;
+			outline: none;
+			transition: border-color 0.2s, box-shadow 0.2s;
+		}
+
+		input[type="text"]:focus {
+			border-color: var(--green);
+			box-shadow: 0 0 8px var(--green-glow);
+		}
+
+		textarea {
+			width: 100%;
+			background: transparent;
+			border: 1px solid var(--green-dim);
+			color: var(--green);
+			font-family: 'Share Tech Mono', monospace;
+			font-size: 0.85rem;
+			padding: 0.75rem;
+			outline: none;
+			resize: vertical;
+			min-height: 180px;
+			line-height: 1.6;
+			transition: border-color 0.2s, box-shadow 0.2s;
+		}
+
+		textarea:focus {
+			border-color: var(--green);
+			box-shadow: 0 0 8px var(--green-glow);
+		}
+
+		.btn {
+			background: transparent;
+			border: 1px solid var(--green);
+			color: var(--green);
+			font-family: 'Share Tech Mono', monospace;
+			font-size: 0.85rem;
+			padding: 0.6rem 2rem;
+			cursor: crosshair;
+			letter-spacing: 0.1em;
+			transition: background 0.15s, box-shadow 0.15s;
+		}
+
+		.btn:hover {
+			background: var(--green-glow);
+			box-shadow: 0 0 12px var(--green-glow);
+		}
+
+		.btn:active {
+			background: var(--green);
+			color: var(--bg);
+		}
+
+		#status {
+			margin-top: 1.5rem;
+			font-size: 0.8rem;
+			min-height: 1.5rem;
+		}
+
+		.status-ok  { color: var(--green); text-shadow: 0 0 8px var(--green); }
+		.status-err { color: #ff4444; text-shadow: 0 0 8px rgba(255,68,68,0.4); }
+
+		.cursor {
+			display: inline-block;
+			width: 8px;
+			height: 1em;
+			background: var(--green);
+			vertical-align: text-bottom;
+			animation: blink 1s step-end infinite;
+		}
+
+		@keyframes blink {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0; }
+		}
+	</style>
+</head>
+<body>
+	<div class="screen">
+		<div class="nav">
+			<a href="/">← webserv_sys</a>
+			<span>UPLOAD_TERMINAL</span>
+		</div>
+
+		<hr>
+
+		<h1>// TRANSMIT FILE</h1>
+		<p class="desc">POST to /uploads/ — plain text only</p>
+
+		<div class="field">
+			<div class="field-label">FILENAME</div>
+			<input type="text" id="filename" placeholder="mijnbestand.txt" spellcheck="false">
+		</div>
+
+		<div class="field">
+			<div class="field-label">CONTENT</div>
+			<textarea id="content" placeholder="type here..." spellcheck="false"></textarea>
+		</div>
+
+		<button class="btn" onclick="upload()">TRANSMIT →</button>
+
+		<div id="status"><span class="cursor"></span></div>
+	</div>
+
+	<script>
+		async function upload() {
+			const filename = document.getElementById('filename').value.trim();
+			const content = document.getElementById('content').value;
+			const status = document.getElementById('status');
+
+			if (!filename) {
+				status.innerHTML = '<span class="status-err">[ERROR] filename required</span>';
+				return;
+			}
+
+			if (!content) {
+				status.innerHTML = '<span class="status-err">[ERROR] content is empty</span>';
+				return;
+			}
+
+			status.innerHTML = 'transmitting...';
+
+			try {
+				const res = await fetch('/uploads/' + filename, {
+					method: 'POST',
+					headers: { 'Content-Type': 'text/plain' },
+					body: content
+				});
+
+				if (res.status === 201) {
+					status.innerHTML = '<span class="status-ok">[OK] ' + res.status + ' — file uploaded: /uploads/' + filename + '</span>';
+					document.getElementById('content').value = '';
+					document.getElementById('filename').value = '';
+				} else {
+					status.innerHTML = '<span class="status-err">[ERROR] ' + res.status + ' — ' + res.statusText + '</span>';
+				}
+			} catch (e) {
+				status.innerHTML = '<span class="status-err">[ERROR] connection failed</span>';
+			}
+		}
+
+		document.getElementById('filename').addEventListener('keydown', e => {
+			if (e.key === 'Enter') document.getElementById('content').focus();
+		});
+	</script>
+</body>
+</html>

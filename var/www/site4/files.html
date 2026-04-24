@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>FILES — WEBSERV_SYS</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+		:root {
+			--green: #00ff41;
+			--green-dim: #00aa2a;
+			--green-glow: rgba(0, 255, 65, 0.15);
+			--red: #ff4444;
+			--red-glow: rgba(255, 68, 68, 0.15);
+			--bg: #000300;
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+
+		body {
+			background: var(--bg);
+			color: var(--green);
+			font-family: 'Share Tech Mono', monospace;
+			min-height: 100vh;
+			cursor: crosshair;
+		}
+
+		body::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: repeating-linear-gradient(
+				0deg,
+				transparent,
+				transparent 2px,
+				rgba(0, 0, 0, 0.15) 2px,
+				rgba(0, 0, 0, 0.15) 4px
+			);
+			pointer-events: none;
+			z-index: 100;
+		}
+
+		body::after {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.8) 100%);
+			pointer-events: none;
+			z-index: 99;
+		}
+
+		.screen {
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 3rem 2rem;
+		}
+
+		.nav {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 2rem;
+			font-size: 0.75rem;
+			color: var(--green-dim);
+		}
+
+		.nav a {
+			color: var(--green);
+			text-decoration: none;
+		}
+
+		.nav a:hover { text-shadow: 0 0 8px var(--green); }
+
+		hr {
+			border: none;
+			border-top: 1px solid var(--green-dim);
+			margin: 1.5rem 0;
+		}
+
+		h1 {
+			font-size: 1.5rem;
+			letter-spacing: 0.1em;
+			text-shadow: 0 0 10px var(--green);
+			margin-bottom: 0.5rem;
+		}
+
+		.desc {
+			font-size: 0.75rem;
+			color: var(--green-dim);
+			margin-bottom: 2rem;
+		}
+
+		#file-list {
+			display: flex;
+			flex-direction: column;
+			gap: 1px;
+			background: var(--green-dim);
+			border: 1px solid var(--green-dim);
+		}
+
+		.file-row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			background: var(--bg);
+			padding: 0.75rem 1rem;
+			gap: 1rem;
+		}
+
+		.file-row:hover {
+			background: rgba(0, 255, 65, 0.04);
+		}
+
+		.file-name {
+			flex: 1;
+			font-size: 0.85rem;
+		}
+
+		.file-name a {
+			color: var(--green);
+			text-decoration: none;
+		}
+
+		.file-name a:hover {
+			text-shadow: 0 0 8px var(--green);
+			text-decoration: underline;
+		}
+
+		.btn-delete {
+			background: transparent;
+			border: 1px solid var(--red);
+			color: var(--red);
+			font-family: 'Share Tech Mono', monospace;
+			font-size: 0.7rem;
+			padding: 0.3rem 0.75rem;
+			cursor: crosshair;
+			letter-spacing: 0.05em;
+			transition: background 0.15s;
+			flex-shrink: 0;
+		}
+
+		.btn-delete:hover {
+			background: var(--red-glow);
+			box-shadow: 0 0 8px var(--red-glow);
+		}
+
+		.btn-delete:active {
+			background: var(--red);
+			color: var(--bg);
+		}
+
+		.empty {
+			padding: 1.5rem 1rem;
+			background: var(--bg);
+			font-size: 0.8rem;
+			color: var(--green-dim);
+		}
+
+		#status {
+			margin-top: 1.5rem;
+			font-size: 0.8rem;
+			min-height: 1.5rem;
+		}
+
+		.status-ok  { color: var(--green); text-shadow: 0 0 8px var(--green); }
+		.status-err { color: var(--red); }
+
+		.refresh-btn {
+			background: transparent;
+			border: 1px solid var(--green-dim);
+			color: var(--green-dim);
+			font-family: 'Share Tech Mono', monospace;
+			font-size: 0.75rem;
+			padding: 0.3rem 0.75rem;
+			cursor: crosshair;
+			margin-top: 1.5rem;
+			transition: border-color 0.15s, color 0.15s;
+		}
+
+		.refresh-btn:hover {
+			border-color: var(--green);
+			color: var(--green);
+		}
+	</style>
+</head>
+<body>
+	<div class="screen">
+		<div class="nav">
+			<a href="/">← webserv_sys</a>
+			<span>FILE_MANAGER</span>
+		</div>
+
+		<hr>
+
+		<h1>// UPLOADED FILES</h1>
+		<p class="desc">GET /uploads/ — click filename to download, delete to remove</p>
+
+		<div id="file-list">
+			<div class="empty">loading...</div>
+		</div>
+
+		<button class="refresh-btn" onclick="loadFiles()">REFRESH</button>
+
+		<div id="status"></div>
+	</div>
+
+	<script>
+		async function loadFiles() {
+			const list = document.getElementById('file-list');
+			list.innerHTML = '<div class="empty">scanning...</div>';
+
+			try {
+				const res = await fetch('/uploads/');
+				const text = await res.text();
+
+				// parse autoindex — extract href links from <a> tags
+				const parser = new DOMParser();
+				const doc = parser.parseFromString(text, 'text/html');
+				const links = [...doc.querySelectorAll('a')]
+					.map(a => a.getAttribute('href'))
+					.filter(href => href && !href.endsWith('/') && href !== '../')
+					.map(href => href.split('/').pop()); // voeg deze regel toe
+
+				if (links.length === 0) {
+					list.innerHTML = '<div class="empty">no files found</div>';
+					return;
+				}
+
+				list.innerHTML = links.map(name => `
+					<div class="file-row" id="row-${CSS.escape(name)}">
+						<div class="file-name">
+							<a href="/uploads/${name}" target="_blank">${name}</a>
+						</div>
+						<button class="btn-delete" onclick="deleteFile('${name}')">DELETE</button>
+					</div>
+				`).join('');
+
+			} catch (e) {
+				list.innerHTML = '<div class="empty">failed to load</div>';
+			}
+		}
+
+		async function deleteFile(name) {
+			const status = document.getElementById('status');
+			status.innerHTML = 'deleting ' + name + '...';
+
+			try {
+				const res = await fetch('/uploads/' + name, { method: 'DELETE' });
+
+				if (res.status === 204) {
+					status.innerHTML = '<span class="status-ok">[OK] 204 — deleted: ' + name + '</span>';
+					const row = document.getElementById('row-' + CSS.escape(name));
+					if (row) row.remove();
+
+					if (document.getElementById('file-list').children.length === 0)
+						document.getElementById('file-list').innerHTML = '<div class="empty">no files found</div>';
+				} else {
+					status.innerHTML = '<span class="status-err">[ERROR] ' + res.status + ' — could not delete ' + name + '</span>';
+				}
+			} catch (e) {
+				status.innerHTML = '<span class="status-err">[ERROR] connection failed</span>';
+			}
+		}
+
+		loadFiles();
+	</script>
+</body>
+</html>

@@ -83,7 +83,6 @@ RequestHandler::RequestHandler(const HttpRequest& request,
 RequestHandler::RequestHandler(const std::map<int, std::string>& errorPages, int errorCode) 
 	: _errorPages(errorPages)
 {
-	_response.setVersion("HTTP/1.1");
 	errorPage(errorCode);
 }
 
@@ -94,8 +93,6 @@ HttpResponse RequestHandler::getResponse() const {
 }
 
 void RequestHandler::handle() {
-	_response.setVersion("HTTP/1.1");
-
 	if (redirectCheck())
 		return;
 
@@ -228,17 +225,31 @@ void RequestHandler::handleDirectory(std::string path) {
 		errorPage(403);
 }
 
-void RequestHandler::serveDirList(std::string path){
+void RequestHandler::serveDirList(std::string path) {
 	DIR *directory = opendir(path.c_str());
 	if (directory == NULL) {
 		errorPage(500);
 		return;
 	}
+
 	std::vector<std::string> dirs;
 	std::vector<std::string> files;
+	readDirectory(directory, dirs, files);
+	closedir(directory);
 
+	std::string requestPath = _request.getPath();
+	if (requestPath.back() != '/')
+		requestPath += "/";
+
+	_response.setBody(buildDirListHtml(requestPath, dirs, files));
+	_response.setContentLength(_response.getBody().size());
+	_response.setStatusCode(200);
+	_response.setContentType("text/html");
+}
+
+void RequestHandler::readDirectory(DIR* dir, std::vector<std::string>& dirs, std::vector<std::string>& files) {
 	dirent *entry;
-	while ((entry = readdir(directory)) != NULL) {
+	while ((entry = readdir(dir)) != NULL) {
 		std::string name = entry->d_name;
 		if (name == "." || name == "..")
 			continue;
@@ -247,20 +258,16 @@ void RequestHandler::serveDirList(std::string path){
 		else
 			files.push_back(name);
 	}
+}
 
-	std::string html = "<html><body><h1>Index of " + path + "</h1><hr><ul>";
-
+std::string RequestHandler::buildDirListHtml(const std::string& requestPath, const std::vector<std::string>& dirs, const std::vector<std::string>& files) {
+	std::string html = "<html><body><h1>Index of " + requestPath + "</h1><hr><ul>";
 	for (size_t i = 0; i < dirs.size(); i++)
-		html += "<li><a href=\"" + dirs[i] + "\">" + dirs[i] + "</a></li>";
+		html += "<li><a href=\"" + requestPath + dirs[i] + "\">" + dirs[i] + "</a></li>";
 	for (size_t i = 0; i < files.size(); i++)
-		html += "<li><a href=\"" + files[i] + "\">" + files[i] + "</a></li>";
-
+		html += "<li><a href=\"" + requestPath + files[i] + "\">" + files[i] + "</a></li>";
 	html += "</ul><hr></body></html>";
-
-	_response.setBody(html);
-	_response.setContentLength(html.size());
-	_response.setStatusCode(200);
-	_response.setContentType("text/html");
+	return html;
 }
 
 void RequestHandler::serveFile(const std::string& path) {

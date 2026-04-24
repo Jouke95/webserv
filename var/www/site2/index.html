@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Webserv</title>
+	<title>Webserv — Site 2</title>
 	<style>
 		:root {
-			--bg: #0f0f0f;
-			--surface: #1a1a1a;
-			--border: #2a2a2a;
+			--bg: #0a0f1a;
+			--surface: #111827;
+			--border: #1e2d40;
 			--text: #e8e8e8;
-			--muted: #666;
-			--accent: #4ade80;
+			--muted: #4a6080;
+			--accent: #38bdf8;
 		}
 
 		* { margin: 0; padding: 0; box-sizing: border-box; }
@@ -35,7 +35,7 @@
 		.badge {
 			display: inline-block;
 			background: var(--accent);
-			color: #0f0f0f;
+			color: #0a0f1a;
 			font-size: 0.65rem;
 			font-weight: bold;
 			padding: 2px 8px;
@@ -75,24 +75,11 @@
 			transition: background 0.1s;
 		}
 
-		.link-item:hover {
-			background: var(--border);
-		}
+		.link-item:hover { background: var(--border); }
 
-		.link-item .arrow {
-			color: var(--accent);
-			font-size: 0.75rem;
-		}
-
-		.link-item .name {
-			flex: 1;
-			font-size: 0.9rem;
-		}
-
-		.link-item .desc {
-			color: var(--muted);
-			font-size: 0.75rem;
-		}
+		.link-item .arrow { color: var(--accent); font-size: 0.75rem; }
+		.link-item .name { flex: 1; font-size: 0.9rem; }
+		.link-item .desc { color: var(--muted); font-size: 0.75rem; }
 
 		footer {
 			margin-top: 3rem;
@@ -107,29 +94,19 @@
 	<div class="container">
 		<div class="badge">HTTP/1.1</div>
 		<h1>webserv</h1>
-		<p class="subtitle">C++ HTTP server — Codam</p>
+		<p class="subtitle">server 2 — port 8081</p>
 
 		<div class="links">
-			<a href="/uploads/" class="link-item">
+			<a href="/" class="link-item">
 				<span class="arrow">→</span>
-				<span class="name">/uploads/</span>
-				<span class="desc">bestanden</span>
-			</a>
-			<a href="/text.html" class="link-item">
-				<span class="arrow">→</span>
-				<span class="name">/text.html</span>
-				<span class="desc">tekstpagina</span>
-			</a>
-			<a href="/foto.jpg" class="link-item">
-				<span class="arrow">→</span>
-				<span class="name">/foto.jpg</span>
-				<span class="desc">afbeelding</span>
+				<span class="name">/</span>
+				<span class="desc">home</span>
 			</a>
 		</div>
 
 		<footer>
 			<span>webserv/1.0</span>
-			<span>localhost:8080</span>
+			<span>localhost:8081</span>
 		</footer>
 	</div>
 </body>

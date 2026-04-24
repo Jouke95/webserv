@@ -12,7 +12,6 @@ HttpResponse& HttpResponse::operator=(const HttpResponse& other) {
 	if (this != &other) {
 		_statusCode = other._statusCode;
 		_body = other._body;
-		_connection = other._connection;
 		_contentLength = other._contentLength;
 		_statusMessage = other._statusMessage;
 		_contentType = other._contentType;
@@ -38,16 +37,11 @@ void HttpResponse::setStatusMessage(const std::string& statusMessage) {
 	_statusMessage = statusMessage;
 }
 
-void HttpResponse::setConnection(const std::string& connection) {
-	_connection = connection;
-}
-
 void HttpResponse::setContentType(const std::string& contentType) {
 	_contentType = contentType;
 }
 
 void HttpResponse::setBody(const std::string& body) {
-		void serveDirList();
 	_body = body;
 }
 
@@ -70,10 +64,6 @@ int HttpResponse::getStatusCode() const {
 
 std::string HttpResponse::getStatusMessage() const {
 	return _statusMessage;
-}
-
-std::string HttpResponse::getConnection() const {
-	return _connection;
 }
 
 std::string HttpResponse::getContentType() const {

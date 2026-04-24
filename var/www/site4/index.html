@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>WEBSERV_SYS</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+		:root {
+			--green: #00ff41;
+			--green-dim: #00aa2a;
+			--green-glow: rgba(0, 255, 65, 0.15);
+			--bg: #000300;
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+
+		body {
+			background: var(--bg);
+			color: var(--green);
+			font-family: 'Share Tech Mono', monospace;
+			min-height: 100vh;
+			overflow-x: hidden;
+			cursor: crosshair;
+		}
+
+		/* CRT scanlines overlay */
+		body::before {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: repeating-linear-gradient(
+				0deg,
+				transparent,
+				transparent 2px,
+				rgba(0, 0, 0, 0.15) 2px,
+				rgba(0, 0, 0, 0.15) 4px
+			);
+			pointer-events: none;
+			z-index: 100;
+		}
+
+		/* CRT vignette */
+		body::after {
+			content: '';
+			position: fixed;
+			inset: 0;
+			background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.8) 100%);
+			pointer-events: none;
+			z-index: 99;
+		}
+
+		.screen {
+			max-width: 800px;
+			margin: 0 auto;
+			padding: 3rem 2rem;
+			min-height: 100vh;
+		}
+
+		.boot-line {
+			font-size: 0.7rem;
+			color: var(--green-dim);
+			margin-bottom: 0.25rem;
+			opacity: 0;
+			animation: fadeIn 0.1s forwards;
+		}
+
+		.boot-line:nth-child(1)  { animation-delay: 0.1s; }
+		.boot-line:nth-child(2)  { animation-delay: 0.3s; }
+		.boot-line:nth-child(3)  { animation-delay: 0.5s; }
+		.boot-line:nth-child(4)  { animation-delay: 0.7s; }
+		.boot-line:nth-child(5)  { animation-delay: 0.9s; }
+
+		@keyframes fadeIn {
+			to { opacity: 1; }
+		}
+
+		.divider {
+			border: none;
+			border-top: 1px solid var(--green-dim);
+			margin: 1.5rem 0;
+			opacity: 0;
+			animation: fadeIn 0.1s 1.1s forwards;
+		}
+
+		.title-block {
+			margin: 2rem 0;
+			opacity: 0;
+			animation: fadeIn 0.1s 1.3s forwards;
+		}
+
+		.ascii {
+			font-size: clamp(0.4rem, 1.5vw, 0.75rem);
+			line-height: 1.2;
+			color: var(--green);
+			text-shadow: 0 0 10px var(--green), 0 0 20px var(--green-dim);
+			white-space: pre;
+		}
+
+		.subtitle {
+			font-size: 0.75rem;
+			color: var(--green-dim);
+			margin-top: 1rem;
+			letter-spacing: 0.2em;
+		}
+
+		.stats {
+			display: grid;
+			grid-template-columns: repeat(2, 1fr);
+			gap: 1px;
+			background: var(--green-dim);
+			border: 1px solid var(--green-dim);
+			margin: 2rem 0;
+			opacity: 0;
+			animation: fadeIn 0.1s 1.5s forwards;
+		}
+
+		.stat {
+			background: var(--bg);
+			padding: 1rem;
+		}
+
+		.stat-label {
+			font-size: 0.6rem;
+			color: var(--green-dim);
+			letter-spacing: 0.1em;
+			margin-bottom: 0.25rem;
+		}
+
+		.stat-value {
+			font-size: 1.1rem;
+			color: var(--green);
+			text-shadow: 0 0 8px var(--green);
+		}
+
+		.prompt-block {
+			opacity: 0;
+			animation: fadeIn 0.1s 1.7s forwards;
+		}
+
+		.prompt {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			font-size: 0.85rem;
+			margin-bottom: 0.5rem;
+		}
+
+		.prompt-symbol {
+			color: var(--green);
+			text-shadow: 0 0 8px var(--green);
+		}
+
+		.prompt a {
+			color: var(--green);
+			text-decoration: none;
+		}
+
+		.prompt a:hover {
+			text-shadow: 0 0 12px var(--green);
+			text-decoration: underline;
+		}
+
+		.cursor {
+			display: inline-block;
+			width: 8px;
+			height: 1em;
+			background: var(--green);
+			vertical-align: text-bottom;
+			animation: blink 1s step-end infinite;
+			box-shadow: 0 0 8px var(--green);
+		}
+
+		@keyframes blink {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0; }
+		}
+
+		.glitch {
+			animation: glitch 8s infinite;
+		}
+
+		@keyframes glitch {
+			0%, 95%, 100% { transform: none; filter: none; }
+			96% { transform: skew(-1deg); filter: hue-rotate(90deg); }
+			97% { transform: skew(1deg) translateX(2px); filter: none; }
+			98% { transform: none; filter: hue-rotate(-90deg); }
+		}
+	</style>
+</head>
+<body>
+	<div class="screen">
+		<div class="boot-line">BIOS v2.4.1 ... OK</div>
+		<div class="boot-line">Loading kernel modules ... OK</div>
+		<div class="boot-line">Initializing network stack ... OK</div>
+		<div class="boot-line">Binding socket 0.0.0.0:8083 ... OK</div>
+		<div class="boot-line">WEBSERV_SYS ready.</div>
+
+		<hr class="divider">
+
+		<div class="title-block glitch">
+			<pre class="ascii">
+ ██╗    ██╗███████╗██████╗ ███████╗███████╗██████╗ ██╗   ██╗
+ ██║    ██║██╔════╝██╔══██╗██╔════╝██╔════╝██╔══██╗██║   ██║
+ ██║ █╗ ██║█████╗  ██████╔╝███████╗█████╗  ██████╔╝██║   ██║
+ ██║███╗██║██╔══╝  ██╔══██╗╚════██║██╔══╝  ██╔══██╗╚██╗ ██╔╝
+ ╚███╔███╔╝███████╗██████╔╝███████║███████╗██║  ██║ ╚████╔╝ 
+  ╚══╝╚══╝ ╚══════╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝  ╚═══╝  </pre>
+			<div class="subtitle">// HTTP/1.1 SERVER — C++17 — CODAM AMSTERDAM //</div>
+		</div>
+
+		<div class="stats">
+			<div class="stat">
+				<div class="stat-label">STATUS</div>
+				<div class="stat-value">ONLINE</div>
+			</div>
+			<div class="stat">
+				<div class="stat-label">PORT</div>
+				<div class="stat-value">8083</div>
+			</div>
+			<div class="stat">
+				<div class="stat-label">PROTOCOL</div>
+				<div class="stat-value">HTTP/1.1</div>
+			</div>
+			<div class="stat">
+				<div class="stat-label">I/O MODEL</div>
+				<div class="stat-value">POLL()</div>
+			</div>
+		</div>
+
+		<div class="prompt-block">
+			<div class="prompt">
+				<span class="prompt-symbol">root@webserv:~$</span>
+				<span>ls /</span>
+			</div>
+			<div class="prompt">
+				<span class="prompt-symbol">&gt;</span>
+				<a href="http://localhost:8080">/site1</a>
+			</div>
+			<div class="prompt">
+				<span class="prompt-symbol">&gt;</span>
+				<a href="http://localhost:8081">/site2</a>
+			</div>
+			<div class="prompt">
+				<span class="prompt-symbol">&gt;</span>
+				<a href="http://localhost:8082">/site3</a>
+			</div>
+			<div class="prompt">
+				<span class="prompt-symbol">&gt;</span>
+				<a href="/upload.html">/upload</a>
+			</div>
+			<div class="prompt">
+				<span class="prompt-symbol">&gt;</span>
+				<a href="/files.html">/files</a>
+			</div>
+			<div class="prompt">
+				<span class="prompt-symbol">&gt;</span>
+				<span>_ <span class="cursor"></span></span>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

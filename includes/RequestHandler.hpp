@@ -4,6 +4,7 @@
 #include "HttpResponse.hpp"
 #include "HttpRequest.hpp"
 #include "Config.hpp"
+#include <dirent.h>
 
 class RequestHandler {
 	private:
@@ -20,7 +21,6 @@ class RequestHandler {
 		void handlePost();
 		void handleDelete();
 
-		bool isValidMethod();
 		bool redirectCheck();
 		bool decodeRequestBody();
 		std::string makePath(const std::string& base) const;
@@ -29,6 +29,8 @@ class RequestHandler {
 		void serveFile(const std::string& path);
 		void handleDirectory(std::string path);
 		void serveDirList(std::string path);
+		void readDirectory(DIR* dir, std::vector<std::string>& dirs, std::vector<std::string>& files);
+		std::string buildDirListHtml(const std::string& requestPath, const std::vector<std::string>& dirs, const std::vector<std::string>& files);
 		std::string getContentType(const std::string& path);
 		bool shouldGzipResponse() const;
 		void applyGzip();

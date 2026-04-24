@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Webserv — Site 3</title>
+	<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+
+		body {
+			background: #f5f0e8;
+			color: #1a1a1a;
+			font-family: 'DM Sans', sans-serif;
+			min-height: 100vh;
+		}
+
+		header {
+			border-bottom: 2px solid #1a1a1a;
+			padding: 1.5rem 3rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: baseline;
+		}
+
+		.logo {
+			font-family: 'Playfair Display', serif;
+			font-size: 1.5rem;
+			letter-spacing: -0.02em;
+		}
+
+		.port {
+			font-size: 0.75rem;
+			color: #888;
+			font-weight: 300;
+		}
+
+		.hero {
+			padding: 6rem 3rem 4rem;
+			border-bottom: 1px solid #ccc;
+		}
+
+		.tag {
+			font-size: 0.7rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: #888;
+			margin-bottom: 1.5rem;
+		}
+
+		h1 {
+			font-family: 'Playfair Display', serif;
+			font-size: clamp(3rem, 8vw, 6rem);
+			line-height: 1;
+			font-weight: 700;
+			letter-spacing: -0.03em;
+			margin-bottom: 2rem;
+		}
+
+		h1 em {
+			font-style: italic;
+			color: #888;
+		}
+
+		.desc {
+			max-width: 480px;
+			font-size: 1rem;
+			line-height: 1.7;
+			font-weight: 300;
+			color: #444;
+		}
+
+		.grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			border-top: 1px solid #ccc;
+		}
+
+		.card {
+			padding: 2rem 3rem;
+			border-right: 1px solid #ccc;
+			border-bottom: 1px solid #ccc;
+		}
+
+		.card:last-child { border-right: none; }
+
+		.card-num {
+			font-size: 0.7rem;
+			color: #aaa;
+			margin-bottom: 1rem;
+		}
+
+		.card h2 {
+			font-family: 'Playfair Display', serif;
+			font-size: 1.1rem;
+			font-weight: 400;
+			margin-bottom: 0.5rem;
+		}
+
+		.card p {
+			font-size: 0.8rem;
+			color: #666;
+			line-height: 1.6;
+			font-weight: 300;
+		}
+
+		footer {
+			padding: 1.5rem 3rem;
+			font-size: 0.75rem;
+			color: #aaa;
+			display: flex;
+			justify-content: space-between;
+			font-weight: 300;
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="logo">webserv</div>
+		<div class="port">localhost:8082</div>
+	</header>
+
+	<div class="hero">
+		<div class="tag">HTTP/1.1 — C++17</div>
+		<h1>Built<br>from <em>scratch.</em></h1>
+		<p class="desc">A full HTTP/1.1 server written in C++ with poll-based I/O multiplexing, gzip compression, and virtual host support.</p>
+	</div>
+
+	<div class="grid">
+		<div class="card">
+			<div class="card-num">01</div>
+			<h2>Non-blocking I/O</h2>
+			<p>poll() based event loop handling multiple connections concurrently without threads.</p>
+		</div>
+		<div class="card">
+			<div class="card-num">02</div>
+			<h2>Gzip compression</h2>
+			<p>Automatic compression for compressible content types when the client supports it.</p>
+		</div>
+		<div class="card">
+			<div class="card-num">03</div>
+			<h2>Virtual hosts</h2>
+			<p>Multiple servers on different ports with independent configurations and routing.</p>
+		</div>
+	</div>
+
+	<footer>
+		<span>webserv/1.0</span>
+		<span>Codam — Amsterdam</span>
+	</footer>
+</body>
+</html>
