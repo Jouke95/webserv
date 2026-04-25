@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-RequestParser::RequestParser(const std::string& request) : _requestString(request) {
+RequestParser::RequestParser(const std::string& request, int listeningPort) : _requestString(request), _listeningPort(listeningPort) {
 	parse();
 }
 
@@ -86,7 +86,7 @@ void RequestParser::parseHostLine(const std::string& line) {
 	size_t hostColon = line.find(':');
 	if (hostColon == std::string::npos) {
 		host = line;
-		port = 80;
+		port = _listeningPort;
 	}
 	else {
 		host = line.substr(0, hostColon);

@@ -9,6 +9,7 @@ class RequestParser {
 	private:
 		HttpRequest _httpRequest;
 		std::string _requestString;
+		int _listeningPort;
 
 		void parse();
 		void parseRequestLine(std::istringstream& stream);
@@ -19,7 +20,7 @@ class RequestParser {
 
 	public:
 		RequestParser() = delete;
-		RequestParser(const std::string& request);
+		RequestParser(const std::string& request, int port);
 		~RequestParser();
 		RequestParser(const RequestParser& other) = delete;
 		RequestParser& operator=(const RequestParser& other) = delete;

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <netinet/in.h>
 #include <poll.h>
+#include <string>
 #include <vector>
 #include "Client.hpp"
 #include "Config.hpp"
@@ -23,6 +24,7 @@ class Server {
 			Client client;
 			time_t timestamp;
 			bool isServer;
+			int listeningPort;
 		};
 
 		std::vector<Connection> _connections;
@@ -38,14 +40,14 @@ class Server {
 		bool		isReadable(Connection& conn);
 		bool		isWritable(Connection& conn);
 		void		removeConnection(size_t &i);
-		void		addConnection(int serverFD);
+		void		addConnection(int serverFD, int port);
 		int			acceptClient(int serverFD);
-		Connection	createConnection(int fd, bool isServer);
+		Connection	createConnection(int fd, bool isServer, int port);
 		bool		handleRequest(Connection& conn);
 		bool		sendResponse(Connection& conn);
 		bool		isCompleteRequest(Connection& conn);
 		bool		readFromClient(Connection& conn);
-		const ServerConfig&		findServer(const HttpRequest& request);
+		const ServerConfig&		findServer(const std::string& host, int listeningPort);
 		const LocationConfig&	findLocation(const ServerConfig& server, const std::string& path);
 		void		buildResponse(Connection& conn, const HttpResponse& response);
 

@@ -164,7 +164,10 @@ void RequestHandler::handleGet() {
 
 	struct stat info;
 	if (stat(path.c_str(), &info) == -1) {
-		errorPage(404);
+		if (errno == EACCES)
+			errorPage(403);
+		else
+			errorPage(404);
 		return;
 	}
 

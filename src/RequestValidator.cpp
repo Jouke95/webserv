@@ -96,6 +96,8 @@ bool RequestValidator::isValidContentLength() {
 		_isValid = false;
 		return false;
 	}
+	std::cout << "contentLength: " << contentLength << std::endl;
+	std::cout << "maxBodySize: " << _server.maxBodySize << std::endl;
 	if (contentLength >= 0 && (size_t)contentLength > _server.maxBodySize) {
 		_errorCode = 413;
 		_isValid = false;
@@ -105,6 +107,8 @@ bool RequestValidator::isValidContentLength() {
 }
 
 bool RequestValidator::isValidContentType() {
+	if (_request.getBody().empty())
+		return true;
 	if (_request.getContentType().empty()) {
 		_errorCode = 400;
 		_isValid = false;

@@ -40,7 +40,7 @@ void Server::start()
 
 		std::cout << "Server up, listening at " << server.host << ":" << server.port << std::endl;
 
-		_connections.push_back(createConnection(serverFD, true));
+		_connections.push_back(createConnection(serverFD, true, server.port));
 	}
 }
 
@@ -72,7 +72,7 @@ void Server::handleConnection(size_t &i)
 	}
 	if (isReadable(conn)) {
 		if (conn.isServer)
-			addConnection(conn.pfd.fd);
+			addConnection(conn.pfd.fd, conn.listeningPort);
 		else if (!handleRequest(conn))
 			removeConnection(i);
 	}
@@ -101,11 +101,11 @@ void Server::removeConnection(size_t &i) {
 	i--;
 }
 
-void Server::addConnection(int serverFD) {
+void Server::addConnection(int serverFD, int port) {
 	int clientFD = acceptClient(serverFD);
 	if (clientFD < 0)
 		return;
-	_connections.push_back(createConnection(clientFD, false));
+	_connections.push_back(createConnection(clientFD, false, port));
 }
 
 int Server::acceptClient(int serverFD) {
@@ -121,13 +121,15 @@ int Server::acceptClient(int serverFD) {
 	return clientFD;
 }
 
-Server::Connection Server::createConnection(int fd, bool isServer) {
+Server::Connection Server::createConnection(int fd, bool isServer, int listeningPort) {
 	Connection conn;
 	conn.pfd.fd = fd;
 	conn.pfd.events = POLLIN;
 	conn.pfd.revents = 0;
 	conn.timestamp = time(NULL);
 	conn.isServer = isServer;
+	conn.listeningPort = listeningPort;
+
 	return conn;
 }
 
@@ -137,10 +139,10 @@ bool Server::handleRequest(Connection& conn) {
 	if (!isCompleteRequest(conn))
 		return true;
 
-	RequestParser parser(conn.client._request);
+	RequestParser parser(conn.client._request, conn.listeningPort);
 	// parser.printRequest();
 	
-	const ServerConfig& server = findServer(parser.getRequest());
+	const ServerConfig& server = findServer(parser.getRequest().getHost(), conn.listeningPort);
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
 	
 	RequestValidator requestValidator(parser.getRequest(), server, location);
@@ -188,10 +190,10 @@ bool Server::isCompleteRequest(Connection& conn) {
 	return true;
 }
 
-const ServerConfig& Server::findServer(const HttpRequest& request) {
+const ServerConfig& Server::findServer(const std::string& host, int port) {
 	for (size_t i = 0; i < _config.getServers().size(); i++) {
-		if (request.getHost() == _config.getServers()[i].host &&
-			request.getPort() == _config.getServers()[i].port)
+		if (host == _config.getServers()[i].host &&
+			port == _config.getServers()[i].port)
 			return _config.getServers()[i];
 	}
 	return _config.getServers()[0];	// default server
