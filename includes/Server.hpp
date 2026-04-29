@@ -47,7 +47,7 @@ class Server {
 		bool		sendResponse(Connection& conn);
 		bool		isCompleteRequest(Connection& conn);
 		bool		readFromClient(Connection& conn);
-		const ServerConfig&		findServer(const std::string& host, int listeningPort);
+		const ServerConfig&		findServer(int listeningPort);
 		const LocationConfig&	findLocation(const ServerConfig& server, const std::string& path);
 		void		buildResponse(Connection& conn, const HttpResponse& response);
 

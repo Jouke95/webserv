@@ -32,8 +32,13 @@ void Server::start()
 
 		sockaddr_in addr = createAddress(server);
 
-		if (bind(serverFD, (sockaddr*)&addr, sizeof(addr)) < 0)
-			throw std::runtime_error("bind() failed on " + server.host + ":" + std::to_string(server.port));
+		if (bind(serverFD, (sockaddr*)&addr, sizeof(addr)) < 0) {
+			std::cerr << "Warning: bind() failed on " 
+					  << server.host << ":" << server.port 
+					  << " - skipping" << std::endl;
+			close(serverFD);
+			continue;
+		}
 
 		if (listen(serverFD, 10) < 0)
 			throw std::runtime_error("listen() failed");
@@ -42,6 +47,9 @@ void Server::start()
 
 		_connections.push_back(createConnection(serverFD, true, server.port));
 	}
+
+	if (_connections.empty())
+		throw std::runtime_error("no servers could bind, exiting");
 }
 
 sockaddr_in Server::createAddress(const ServerConfig& server) {
@@ -142,7 +150,7 @@ bool Server::handleRequest(Connection& conn) {
 	RequestParser parser(conn.client._request, conn.listeningPort);
 	// parser.printRequest();
 	
-	const ServerConfig& server = findServer(parser.getRequest().getHost(), conn.listeningPort);
+	const ServerConfig& server = findServer(conn.listeningPort);
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
 	
 	RequestValidator requestValidator(parser.getRequest(), server, location);
@@ -190,13 +198,12 @@ bool Server::isCompleteRequest(Connection& conn) {
 	return true;
 }
 
-const ServerConfig& Server::findServer(const std::string& host, int port) {
+const ServerConfig& Server::findServer(int port) {
 	for (size_t i = 0; i < _config.getServers().size(); i++) {
-		if (host == _config.getServers()[i].host &&
-			port == _config.getServers()[i].port)
+		if (port == _config.getServers()[i].port)
 			return _config.getServers()[i];
 	}
-	return _config.getServers()[0];	// default server
+	throw std::runtime_error("No server config found for port " + std::to_string(port));
 }
 
 const LocationConfig& Server::findLocation(const ServerConfig& server, const std::string& requestPath) {
@@ -223,6 +230,9 @@ const LocationConfig& Server::findLocation(const ServerConfig& server, const std
 void Server::buildResponse(Connection& conn, const HttpResponse& response) {
 	ResponseBuilder builder(response);
 	conn.client._response = builder.build();
+
+	std::cout << "Response:\n" << conn.client._response << std::endl;
+
 	conn.pfd.events = POLLIN | POLLOUT;
 }
 
@@ -236,7 +246,7 @@ bool Server::sendResponse(Connection &conn) {
 
 	bytesSent += bytes;
 
-	return bytesSent == (ssize_t)response.size(); // true = done
+	return bytesSent == (ssize_t)response.size();	// true = done
 }
 
 void Server::pollConnections() {
