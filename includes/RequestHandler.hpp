@@ -35,6 +35,9 @@ class RequestHandler {
 		bool shouldGzipResponse() const;
 		void applyGzip();
 		bool isCGI(std::string path);
+		void handleCGI();
+		void executeCGI(std::string interpreter);
+		void setCGIEnv(const HttpRequest& req, const LocationConfig& location, const std::string& scriptPath);
 
 	public:
 		RequestHandler(const HttpRequest& request,
