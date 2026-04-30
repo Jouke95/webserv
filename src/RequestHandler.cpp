@@ -101,6 +101,10 @@ void RequestHandler::handle() {
 
 	std::string method = _request.getMethod();
 
+	if (isCGI(_request.getPath())) {
+		handleCGI();
+	}
+
 	if (method == "GET")
 		handleGet();
 	else if (method == "POST")
@@ -110,6 +114,33 @@ void RequestHandler::handle() {
 
 	applyGzip();
 }
+
+bool RequestHandler::isCGI(std::string path) {
+	if (!_location.cgiExtensions.empty()) {
+		return true;
+	}
+	return false;
+}
+
+handleCGI()
+{
+	// Compare file extension with CGI extension
+
+	// Set ENV Vars
+
+	// Fork + Pipe
+
+	// in child:
+	// read van stdin
+	// Execv(CGI Path, path)
+
+	// in parent:
+	// Read pipe
+	// 200 OK HTTP1.1
+	// output van het script parsen
+}
+
+
 
 bool RequestHandler::redirectCheck() {
 	if (_location.redirectCode != 0 && !_location.redirectPage.empty()) {

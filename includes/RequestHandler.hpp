@@ -34,6 +34,7 @@ class RequestHandler {
 		std::string getContentType(const std::string& path);
 		bool shouldGzipResponse() const;
 		void applyGzip();
+		bool isCGI(std::string path);
 
 	public:
 		RequestHandler(const HttpRequest& request,

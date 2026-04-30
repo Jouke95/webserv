@@ -148,11 +148,11 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request, conn.listeningPort);
-	// parser.printRequest();
+	parser.printRequest();
 	
 	const ServerConfig& server = findServer(conn.listeningPort);
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
-	
+
 	RequestValidator requestValidator(parser.getRequest(), server, location);
 
 	if (!requestValidator.isValid()) {
