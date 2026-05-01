@@ -21,6 +21,9 @@ class Server {
 
 		struct Connection {
 			struct pollfd pfd;
+			struct pollfd cgiReadPfd;
+			struct pollfd cgiWritePfd;
+			CGI* cgi;
 			Client client;
 			time_t timestamp;
 			bool isServer;
@@ -50,6 +53,12 @@ class Server {
 		const ServerConfig&		findServer(int listeningPort);
 		const LocationConfig&	findLocation(const ServerConfig& server, const std::string& path);
 		void		buildResponse(Connection& conn, const HttpResponse& response);
+		bool		isCGI(const LocationConfig& location, const std::string& path);
+		std::string	getExtension(const std::string& path);
+		void 		startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location);
+		bool		isCGIClient(Connection& conn);
+		bool		handleCGI(Connection& conn);
+
 
 	public:
 		Server() = delete;

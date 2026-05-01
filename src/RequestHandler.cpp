@@ -101,10 +101,6 @@ void RequestHandler::handle() {
 
 	std::string method = _request.getMethod();
 
-	if (isCGI(_request.getPath())) {
-		handleCGI();
-	}
-
 	if (method == "GET")
 		handleGet();
 	else if (method == "POST")
@@ -113,97 +109,6 @@ void RequestHandler::handle() {
 		handleDelete();
 
 	applyGzip();
-}
-
-bool RequestHandler::isCGI(std::string path) {
-	if (!_location.cgiExtensions.empty()) {
-		return true;
-	}
-	return false;
-}
-
-void RequestHandler::handleCGI()
-{
-
-	std::string extension = getExtension(_request.getPath());
-	std::string interpreter;
-	for (size_t i = 0; i < _location.cgiExtensions.size(); i++) {
-		if (_location.cgiExtensions[i] == extension) {
-			interpreter = _location.cgiPaths[i];
-			break;
-		}
-	}
-	if (interpreter.empty()) {
-		errorPage(403);
-		return;
-	}
-
-	executeCGI(interpreter);
-
-	// Set ENV Vars
-
-	// Fork + Pipe
-
-	// in child:
-	// read van stdin
-	// Execv(CGI Path, path)
-
-	// in parent:
-	// Read pipe
-	// 200 OK HTTP1.1
-	// output van het script parsen
-}
-
-void RequestHandler::executeCGI(std::string interpreter) {
-
-	setCGIEnv(_request, _location, _request.getPath());
-
-
-	execve(interpreter, _request.getPath(), env)
-
-}
-
-void RequestHandler::setCGIEnv(const HttpRequest& req, const LocationConfig& location, const std::string& scriptPath)
-{
-	// ── Verplicht ─────────────────────────────────────────────
-	setenv("REQUEST_METHOD",  req._method.c_str(),                    1); // "GET" / "POST"
-	setenv("SERVER_PROTOCOL", "HTTP/1.1",                            1); // altijd
-	setenv("GATEWAY_INTERFACE", "CGI/1.1",                          1); // altijd
-
-	// ── URL info ──────────────────────────────────────────────
-	setenv("PATH_INFO",       req._path.c_str(),                      1); // "/cgi-bin/hello.py"
-	setenv("PATH_TRANSLATED", scriptPath.c_str(),                    1); // "/var/www/cgi-bin/hello.py"
-	setenv("SCRIPT_NAME",     req._path.c_str(),                      1); // zelfde als PATH_INFO
-	setenv("QUERY_STRING",    req.queryString.c_str(),               1); // "name=Jouke&age=20" of ""
-
-	// ── Server info ───────────────────────────────────────────
-	setenv("SERVER_NAME",     server.host.c_str(),                   1); // "127.0.0.1"
-	setenv("SERVER_PORT",     std::to_string(server.port).c_str(),   1); // "8080"
-	setenv("SERVER_SOFTWARE", "webserv/1.0",                         1); // mag je zelf kiezen
-
-	// ── Client info ───────────────────────────────────────────
-	setenv("REMOTE_ADDR",     req.clientIP.c_str(),                  1); // "127.0.0.1"
-
-	// ── POST specifiek ────────────────────────────────────────
-	if (req.method == "POST") {
-		setenv("CONTENT_TYPE",   req.getHeader("Content-Type").c_str(),               1);
-		setenv("CONTENT_LENGTH", std::to_string(req.body.size()).c_str(),             1);
-	}
-
-	// ── HTTP headers (optioneel maar verwacht door scripts) ───
-	setenv("HTTP_HOST",       req.getHeader("Host").c_str(),         1);
-	setenv("HTTP_USER_AGENT", req.getHeader("User-Agent").c_str(),   1);
-	setenv("HTTP_ACCEPT",     req.getHeader("Accept").c_str(),       1);
-	setenv("HTTP_COOKIE",     req.getHeader("Cookie").c_str(),       1); // voor sessies
-}
-
-std::string getExtension(const std::string& path) {
-	size_t dot = path.rfind('.');
-	size_t slash = path.rfind('/');
-
-	if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
-		return "";
-	return path.substr(dot);
 }
 
 bool RequestHandler::redirectCheck() {

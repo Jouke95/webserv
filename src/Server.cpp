@@ -8,7 +8,7 @@
 #include "RequestValidator.hpp"
 #include "Server.hpp"
 #include "utils.hpp"
-
+#include "CGI.hpp"
 
 Server::Server(const Config& config) : _config(config) {}
 
@@ -78,6 +78,11 @@ void Server::handleConnection(size_t &i)
 		removeConnection(i);
 		return;
 	}
+
+	if (isCGIClient(conn))
+		if (!handleCGI(conn))
+			return;
+
 	if (isReadable(conn)) {
 		if (conn.isServer)
 			addConnection(conn.pfd.fd, conn.listeningPort);
@@ -89,6 +94,30 @@ void Server::handleConnection(size_t &i)
 		if (done)
 			removeConnection(i);
 	}
+}
+
+bool Server::isCGIClient(Connection& conn) {
+	return conn.cgi != nullptr;
+}
+
+bool Server::handleCGI(Connection& conn) {
+	if (conn.cgiWritePfd.revents & POLLOUT)
+		conn.cgi->write();
+	if (conn.cgiReadPfd.revents & POLLIN)
+		conn.cgi->read();
+	if (!conn.cgi->isDone())
+		return false;
+	else {
+		HttpResponse response = conn.cgi->getResponse();
+		buildResponse(conn, response);
+		delete conn.cgi;
+		close(conn.cgiReadPfd.fd);
+		close(conn.cgiWritePfd.fd);
+		conn.cgi = nullptr;
+		conn.cgiReadPfd.fd = -1;
+		conn.cgiWritePfd.fd = -1;
+	}
+	return true;
 }
 
 bool Server::isTimedOut(Connection& conn) {
@@ -105,6 +134,12 @@ bool Server::isWritable(Connection& conn) {
 
 void Server::removeConnection(size_t &i) {
 	close(_connections[i].pfd.fd);
+	if (_connections[i].cgiReadPfd.fd != -1)
+		close(_connections[i].cgiReadPfd.fd);
+	if (_connections[i].cgiWritePfd.fd != -1)
+		close(_connections[i].cgiWritePfd.fd);
+	if (_connections[i].cgi != nullptr)
+		delete _connections[i].cgi;
 	_connections.erase(_connections.begin() + i);
 	i--;
 }
@@ -131,9 +166,20 @@ int Server::acceptClient(int serverFD) {
 
 Server::Connection Server::createConnection(int fd, bool isServer, int listeningPort) {
 	Connection conn;
+
 	conn.pfd.fd = fd;
 	conn.pfd.events = POLLIN;
 	conn.pfd.revents = 0;
+
+	conn.cgiReadPfd.fd = -1;
+	conn.cgiReadPfd.events = 0;
+	conn.cgiReadPfd.revents = 0;
+
+	conn.cgiWritePfd.fd = -1;
+	conn.cgiWritePfd.events = 0;
+	conn.cgiWritePfd.revents = 0;
+
+	conn.cgi = nullptr;
 	conn.timestamp = time(NULL);
 	conn.isServer = isServer;
 	conn.listeningPort = listeningPort;
@@ -161,9 +207,47 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 	}
 
+	if (isCGI(location, parser.getRequest().getPath())) {
+		startCGI(conn, parser.getRequest(), location);
+		if (conn.cgi->hasError()) {
+			int errorCode = conn.cgi->getErrorCode();
+			delete conn.cgi;
+			conn.cgi = nullptr;
+			RequestHandler errorHandler(server.errorPages, errorCode);
+			buildResponse(conn, errorHandler.getResponse());
+		}
+		return true;
+	}
+
 	RequestHandler handler(parser.getRequest(), server.errorPages, location, server.maxBodySize);
 	buildResponse(conn, handler.getResponse());
 	return true;
+}
+
+bool Server::isCGI(const LocationConfig& location, const std::string& path) {
+	if (location.cgiExtensions.empty()) {
+		return false;
+	}
+	std::string extension = getExtension(path);
+	for (size_t i = 0; i < location.cgiExtensions.size(); i++) {
+		if (location.cgiExtensions[i] == extension)
+			return true;
+	}
+	return false;
+}
+
+std::string Server::getExtension(const std::string& path) {
+	size_t dot = path.rfind('.');
+	size_t slash = path.rfind('/');
+
+	if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
+		return "";
+	return path.substr(dot);
+}
+
+void Server::startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location) {
+	conn.cgi = new CGI(conn.cgiReadPfd, conn.cgiWritePfd, request, location);
+	conn.pfd.events = 0;
 }
 
 bool Server::readFromClient(Connection& conn) {
@@ -253,11 +337,17 @@ void Server::pollConnections() {
 	// poll() requires a flat array, so we copy the pfds in and back out
 	std::vector<pollfd> fds;
 
-	for (size_t i = 0; i < _connections.size(); i++)
+	for (size_t i = 0; i < _connections.size(); i++) {
 		fds.push_back(_connections[i].pfd);
+		fds.push_back(_connections[i].cgiReadPfd);
+		fds.push_back(_connections[i].cgiWritePfd);
+	}
 
 	poll(fds.data(), fds.size(), 1000);
 
-	for (size_t i = 0; i < _connections.size(); i++)
-		_connections[i].pfd.revents = fds[i].revents;
+	for (size_t i = 0; i < _connections.size(); i++) {
+		_connections[i].pfd.revents = fds[i*3].revents;
+		_connections[i].cgiReadPfd.revents = fds[i*3+1].revents;
+		_connections[i].cgiWritePfd.revents = fds[i*3+2].revents;
+	}
 }

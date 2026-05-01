@@ -3,5 +3,5 @@
 3. Just remember that, for chunked requests, your server needs to un-chunk them, the CGI will expect EOF as the end of the body.
 4. Directory zonder trailing slash — overweeg 301 redirect naar /uploads/ in plaats van direct 200 (zoals Nginx doet)
 5. Multipart/form-data parsing — bestandsnaam uit de body halen bij file uploads, en bestand opslaan met die naam in uploadStore
-
+6. CTRL + C opruimen
 
