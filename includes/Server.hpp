@@ -1,16 +1,18 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "Client.hpp"
+#include "Config.hpp"
+
 #include <ctime>
-#include <iostream>
 #include <netinet/in.h>
 #include <poll.h>
 #include <string>
 #include <vector>
-#include "Client.hpp"
-#include "Config.hpp"
-#include "HttpRequest.hpp"
-#include "HttpResponse.hpp"
+
+class CGI;
+class HttpRequest;
+class HttpResponse;
 
 class Server {
 	private:
@@ -55,7 +57,7 @@ class Server {
 		void		buildResponse(Connection& conn, const HttpResponse& response);
 		bool		isCGI(const LocationConfig& location, const std::string& path);
 		std::string	getExtension(const std::string& path);
-		void 		startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location);
+		void 		startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location, const ServerConfig& server);
 		bool		isCGIClient(Connection& conn);
 		bool		handleCGI(Connection& conn);
 

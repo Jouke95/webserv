@@ -1,5 +1,7 @@
 #include "RequestValidator.hpp"
+#include "HttpRequest.hpp"
 #include "utils.hpp"
+
 #include <iostream>
 
 RequestValidator::RequestValidator(const HttpRequest& request, const ServerConfig& server, const LocationConfig& location)
@@ -96,8 +98,7 @@ bool RequestValidator::isValidContentLength() {
 		_isValid = false;
 		return false;
 	}
-	std::cout << "contentLength: " << contentLength << std::endl;
-	std::cout << "maxBodySize: " << _server.maxBodySize << std::endl;
+
 	if (contentLength >= 0 && (size_t)contentLength > _server.maxBodySize) {
 		_errorCode = 413;
 		_isValid = false;

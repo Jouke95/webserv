@@ -1,18 +1,18 @@
 #include "RequestHandler.hpp"
+
 #include "gzip/Gzip.hpp"
+#include "utils.hpp"
+
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
 #include <climits>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "utils.hpp"
 
 static std::string lowerCopy(const std::string& value) {
 	std::string lower = value;

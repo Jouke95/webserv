@@ -4,7 +4,11 @@
 #include "HttpResponse.hpp"
 #include "HttpRequest.hpp"
 #include "Config.hpp"
+
 #include <dirent.h>
+#include <map>
+#include <string>
+#include <vector>
 
 class RequestHandler {
 	private:

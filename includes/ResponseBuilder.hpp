@@ -1,9 +1,9 @@
 #ifndef RESPONSEBUILDER_HPP
 #define RESPONSEBUILDER_HPP
 
-#include "HttpRequest.hpp"
-#include "Config.hpp"
 #include "HttpResponse.hpp"
+
+#include <string>
 
 class ResponseBuilder {
 	private:

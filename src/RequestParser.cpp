@@ -1,5 +1,6 @@
 #include "RequestParser.hpp"
 #include "utils.hpp"
+
 #include <iostream>
 #include <sstream>
 
@@ -26,6 +27,14 @@ void RequestParser::parseRequestLine(std::istringstream& stream) {
 		std::string method, path, version;
 
 		requestLine >> method >> path >> version;
+
+		size_t query = path.find('?');
+		if (query != std::string::npos) {
+			_httpRequest.setQueryString(path.substr(query + 1));
+			path = path.substr(0, query);
+		} else {
+			_httpRequest.setQueryString("");
+		}
 
 		_httpRequest.setMethod(method);
 		_httpRequest.setPath(path);

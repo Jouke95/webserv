@@ -3,10 +3,24 @@ NAME = webserv
 CC = c++
 CFLAGS = -Wall -Wextra -Werror -Iincludes -Iincludes/gzip -std=c++17
 
-SRCS = src/main.cpp src/RequestParser.cpp src/Server.cpp src/HttpRequest.cpp src/HttpResponse.cpp \
-	   src/Client.cpp src/Config.cpp src/ResponseBuilder.cpp src/RequestHandler.cpp \
-	   src/gzip/DeflateCompress.cpp src/gzip/DeflateDecompress.cpp src/gzip/Gzip.cpp src/gzip/Huffman.cpp src/gzip/LZ77.cpp \
-	   src/utils.cpp src/RequestValidator.cpp src/ConfigValidator.cpp \
+SRCS = src/CGI.cpp \
+		src/Client.cpp \
+		src/Config.cpp \
+		src/ConfigValidator.cpp \
+		src/HttpRequest.cpp \
+		src/HttpResponse.cpp \
+		src/RequestHandler.cpp \
+		src/RequestParser.cpp \
+		src/RequestValidator.cpp \
+		src/ResponseBuilder.cpp \
+		src/Server.cpp \
+		src/main.cpp \
+		src/utils.cpp \
+		src/gzip/DeflateCompress.cpp \
+		src/gzip/DeflateDecompress.cpp \
+		src/gzip/Gzip.cpp \
+		src/gzip/Huffman.cpp \
+		src/gzip/LZ77.cpp \
 
 OBJ_DIR = obj
 

@@ -2,9 +2,11 @@
 #define REQUESTVALIDATOR_HPP
 
 #include "Config.hpp"
-#include "HttpRequest.hpp"
-#include <vector>
+
 #include <string>
+#include <vector>
+
+class HttpRequest;
 
 class RequestValidator {
 	private:

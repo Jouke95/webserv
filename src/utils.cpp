@@ -1,7 +1,9 @@
 #include "utils.hpp"
+
+#include <cctype>
 #include <limits.h>
-#include <unistd.h>
 #include <stdexcept>
+#include <unistd.h>
 
 int strToInt(const std::string& str) {
 	for (size_t i = 0; i < str.size(); i++) {

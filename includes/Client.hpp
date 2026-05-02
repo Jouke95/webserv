@@ -2,6 +2,7 @@
 #define CLIENT_HPP
 
 #include <string>
+#include <sys/types.h>
 
 class Client {
 	private:

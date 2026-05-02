@@ -5,3 +5,5 @@
 5. Multipart/form-data parsing — bestandsnaam uit de body halen bij file uploads, en bestand opslaan met die naam in uploadStore
 6. CTRL + C opruimen
 
+CGI: 
+close (fd) goed checken

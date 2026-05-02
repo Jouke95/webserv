@@ -1,10 +1,11 @@
-#include <climits>
-#include <fstream>
-#include <stdexcept>
-#include <sstream>
-#include <unistd.h>
 #include "Config.hpp"
 #include "utils.hpp"
+
+#include <climits>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <unistd.h>
 
 Config::Config(const std::string& path) {
 	std::string line;

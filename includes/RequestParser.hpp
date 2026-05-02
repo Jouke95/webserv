@@ -1,9 +1,10 @@
 #ifndef REQUESTPARSER_HPP
 #define REQUESTPARSER_HPP
 
+#include "HttpRequest.hpp"
+
 #include <sstream>
 #include <string>
-#include "HttpRequest.hpp"
 
 class RequestParser {
 	private:

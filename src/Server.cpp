@@ -1,14 +1,20 @@
-#include <fcntl.h>
-#include <stdexcept>
-#include <sys/socket.h>
-#include <unistd.h>
+#include "Server.hpp"
+
 #include "RequestParser.hpp"
 #include "ResponseBuilder.hpp"
 #include "RequestHandler.hpp"
 #include "RequestValidator.hpp"
-#include "Server.hpp"
 #include "utils.hpp"
 #include "CGI.hpp"
+
+#include <cerrno>
+#include <ctime>
+#include <fcntl.h>
+#include <iostream>
+#include <netinet/in.h>
+#include <stdexcept>
+#include <sys/socket.h>
+#include <unistd.h>
 
 Server::Server(const Config& config) : _config(config) {}
 
@@ -102,9 +108,9 @@ bool Server::isCGIClient(Connection& conn) {
 
 bool Server::handleCGI(Connection& conn) {
 	if (conn.cgiWritePfd.revents & POLLOUT)
-		conn.cgi->write();
-	if (conn.cgiReadPfd.revents & POLLIN)
-		conn.cgi->read();
+		conn.cgi->writeToCGI();
+	if (conn.cgiReadPfd.revents & (POLLIN | POLLHUP))
+		conn.cgi->readFromCGI();
 	if (!conn.cgi->isDone())
 		return false;
 	else {
@@ -112,7 +118,6 @@ bool Server::handleCGI(Connection& conn) {
 		buildResponse(conn, response);
 		delete conn.cgi;
 		close(conn.cgiReadPfd.fd);
-		close(conn.cgiWritePfd.fd);
 		conn.cgi = nullptr;
 		conn.cgiReadPfd.fd = -1;
 		conn.cgiWritePfd.fd = -1;
@@ -194,7 +199,7 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request, conn.listeningPort);
-	parser.printRequest();
+	// parser.printRequest();
 	
 	const ServerConfig& server = findServer(conn.listeningPort);
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
@@ -208,7 +213,7 @@ bool Server::handleRequest(Connection& conn) {
 	}
 
 	if (isCGI(location, parser.getRequest().getPath())) {
-		startCGI(conn, parser.getRequest(), location);
+		startCGI(conn, parser.getRequest(), location, server);
 		if (conn.cgi->hasError()) {
 			int errorCode = conn.cgi->getErrorCode();
 			delete conn.cgi;
@@ -245,8 +250,8 @@ std::string Server::getExtension(const std::string& path) {
 	return path.substr(dot);
 }
 
-void Server::startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location) {
-	conn.cgi = new CGI(conn.cgiReadPfd, conn.cgiWritePfd, request, location);
+void Server::startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location, const ServerConfig& server) {
+	conn.cgi = new CGI(conn.cgiReadPfd, conn.cgiWritePfd, request, location, server);
 	conn.pfd.events = 0;
 }
 
@@ -315,9 +320,7 @@ void Server::buildResponse(Connection& conn, const HttpResponse& response) {
 	ResponseBuilder builder(response);
 	conn.client._response = builder.build();
 
-	std::cout << "Response:\n" << conn.client._response << std::endl;
-
-	conn.pfd.events = POLLIN | POLLOUT;
+	conn.pfd.events = POLLOUT;
 }
 
 bool Server::sendResponse(Connection &conn) {

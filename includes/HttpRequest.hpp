@@ -13,6 +13,7 @@ class HttpRequest {
 		int			_port;
 		std::string	_contentType;
 		int			_contentLength;
+		std::string	_queryString;
 		std::string	_userAgent;
 		std::string	_connection;
 		std::string	_body;
@@ -31,6 +32,7 @@ class HttpRequest {
 		void		setPort(const int port);
 		void		setContentType(const std::string& contentType);
 		void		setContentLength(int contentLength);
+		void		setQueryString(const std::string& queryString);
 		void		setUserAgent(const std::string& userAgent);
 		void		setConnection(const std::string& connection);
 		void		setBody(const std::string& body);
@@ -43,6 +45,7 @@ class HttpRequest {
 		const std::string&	getContentType() const;
 		const std::string&	getVersion() const;
 		int					getContentLength() const;
+		const std::string&	getQueryString() const;
 		const std::string&	getUserAgent() const;
 		const std::string&	getConnection() const;
 		const std::string&	getBody() const;

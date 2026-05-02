@@ -1,4 +1,5 @@
 #include <HttpRequest.hpp>
+
 #include <algorithm>
 #include <cctype>
 
@@ -54,6 +55,7 @@ HttpRequest& HttpRequest::operator=(const HttpRequest& other) {
 		_port = other._port;
 		_contentType = other._contentType;
 		_contentLength = other._contentLength;
+		_queryString = other._queryString;
 		_userAgent = other._userAgent;
 		_connection = other._connection;
 		_body = other._body;
@@ -96,6 +98,10 @@ void HttpRequest::setConnection(const std::string& connection) {
 
 void HttpRequest::setContentLength(int contentLength) {
 	_contentLength = contentLength;
+}
+
+void HttpRequest::setQueryString(const std::string& queryString) {
+	_queryString = queryString;
 }
 
 void HttpRequest::setVersion(const std::string& version) {
@@ -144,6 +150,10 @@ const std::string& HttpRequest::getVersion() const {
 
 int HttpRequest::getContentLength() const {
 	return _contentLength;
+}
+
+const std::string& HttpRequest::getQueryString() const {
+	return _queryString;
 }
 
 std::string HttpRequest::getHeader(const std::string& key) const {
