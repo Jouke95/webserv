@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Upload — webserv</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap');
+  :root {
+    --bg: #0a0a0f; --surface: #111118; --border: #1e1e2e;
+    --accent: #ff6b35; --text: #e0e0f0; --muted: #555570;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(255,107,53,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,107,53,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  .box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 40px; width: 100%; max-width: 480px;
+    position: relative; z-index: 1;
+    animation: fadeUp 0.4s ease both;
+  }
+  .back { font-size: 11px; color: var(--muted); text-decoration: none; display: block; margin-bottom: 24px; }
+  .back:hover { color: var(--accent); }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  p { font-size: 12px; color: var(--muted); margin-bottom: 32px; }
+  .drop-zone {
+    border: 2px dashed var(--border); border-radius: 8px;
+    padding: 40px; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 20px;
+  }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(255,107,53,0.04); }
+  .drop-zone input { display: none; }
+  .drop-icon { font-size: 32px; margin-bottom: 12px; }
+  .drop-text { font-size: 12px; color: var(--muted); }
+  .drop-text b { color: var(--text); }
+  .file-name { font-size: 12px; color: var(--accent); margin-top: 8px; }
+  button {
+    width: 100%; padding: 14px;
+    background: var(--accent); color: #000; border: none;
+    border-radius: 6px; font-family: var(--mono); font-size: 13px;
+    font-weight: 600; cursor: pointer; letter-spacing: 1px;
+    transition: opacity 0.2s;
+  }
+  button:hover { opacity: 0.85; }
+  .msg { font-size: 12px; text-align: center; margin-top: 16px; color: var(--muted); }
+  .msg.ok { color: #00ff9d; }
+  .msg.err { color: #ff4466; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+<div class="box">
+  <a class="back" href="/">← back to index</a>
+  <h1>upload <span>file</span></h1>
+  <p>POST to /uploads — max 10MB</p>
+
+  <form id="form" method="POST" enctype="multipart/form-data">
+    <div class="drop-zone" id="drop" onclick="document.getElementById('file').click()">
+      <input type="file" id="file" name="file" onchange="showFile(this)">
+      <div class="drop-icon">⬆️</div>
+      <div class="drop-text">drop file here or <b>click to browse</b></div>
+      <div class="file-name" id="fname"></div>
+    </div>
+    <button type="button" onclick="upload()">UPLOAD</button>
+  </form>
+  <div class="msg" id="msg"></div>
+</div>
+
+<script>
+function showFile(input) {
+  document.getElementById('fname').textContent = input.files[0]?.name || '';
+}
+
+const drop = document.getElementById('drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+drop.addEventListener('drop', e => {
+  e.preventDefault();
+  drop.classList.remove('dragover');
+  document.getElementById('file').files = e.dataTransfer.files;
+  showFile(document.getElementById('file'));
+});
+
+async function upload() {
+  const file = document.getElementById('file').files[0];
+  const msg = document.getElementById('msg');
+  if (!file) { msg.className = 'msg err'; msg.textContent = 'no file selected'; return; }
+
+  const res = await fetch('/uploads/' + file.name, {
+    method: 'POST',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
+  });
+
+  if (res.status === 201) {
+    msg.className = 'msg ok';
+    msg.textContent = '✓ uploaded: ' + file.name;
+  } else {
+    msg.className = 'msg err';
+    msg.textContent = 'error: HTTP ' + res.status;
+  }
+}
+</script>
+</body>
+</html>

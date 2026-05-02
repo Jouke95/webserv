@@ -26,7 +26,6 @@ class HttpResponse {
 		void		setStatusMessage(const std::string& statusMessage);
 		void		setContentType(const std::string& contentType);
 		void		setBody(const std::string& body);
-		void		setContentLength(int contentLength);
 		void		setVersion(const std::string &version);
 		void		setHeader(const std::string& key, const std::string& value);
 
@@ -35,7 +34,6 @@ class HttpResponse {
 		std::string	getContentType() const;
 		std::string	getBody() const;
 		std::string	getVersion() const;
-		int			getContentLength() const;
 		const std::map<std::string, std::string>& getHeaders() const;
 
 		static std::map<int, std::string> initStatusMessages();

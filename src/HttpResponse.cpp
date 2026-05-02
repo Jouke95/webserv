@@ -49,11 +49,6 @@ void HttpResponse::setVersion(const std::string& version) {
 	_version = version;
 }
 
-
-void HttpResponse::setContentLength(int contentLength) {
-	_contentLength = contentLength;
-}
-
 void HttpResponse::setHeader(const std::string& key, const std::string& value) {
 	_headers[key] = value;
 }
@@ -76,10 +71,6 @@ std::string HttpResponse::getBody() const {
 
 std::string HttpResponse::getVersion() const {
 	return _version;
-}
-
-int HttpResponse::getContentLength() const {
-	return _contentLength;
 }
 
 const std::map<std::string, std::string>& HttpResponse::getHeaders() const {

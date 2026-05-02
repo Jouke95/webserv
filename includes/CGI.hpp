@@ -23,6 +23,7 @@ class CGI {
 		bool _isDone;
 		bool _hasError;
 		int _errorCode;
+		std::string _scriptPath;
 
 	public:
 		CGI(struct pollfd& cgiReadPfd, struct pollfd& cgiWritePfd, const HttpRequest& request, const LocationConfig& location, const ServerConfig& server);
@@ -40,6 +41,7 @@ class CGI {
 		int getErrorCode();
 		std::string getExtension(const std::string& path);
 		std::string getInterpreter();
+		void validateScript();
 		std::string makePath(const std::string& root);
 		char** setCGIEnv();
 		void freeCGIEnv(char** env);

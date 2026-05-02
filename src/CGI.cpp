@@ -1,10 +1,13 @@
 #include "CGI.hpp"
 #include "HttpResponse.hpp"
+#include "utils.hpp"
 
-#include <unistd.h>
+#include <csignal>
 #include <cstring>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <sys/wait.h>
+#include <unistd.h>
 
 CGI::CGI(pollfd& cgiReadPfd, pollfd& cgiWritePfd, const HttpRequest& request, const LocationConfig& location, const ServerConfig& server)
 	: _readFd1(-1),
@@ -24,6 +27,11 @@ CGI::CGI(pollfd& cgiReadPfd, pollfd& cgiWritePfd, const HttpRequest& request, co
 	if (_hasError)
 		return;
 
+	_scriptPath = makePath(_location.root);
+	validateScript();
+	if (_hasError)
+		return;
+
 	setupChildProcess();
 	if (_hasError)
 		return;
@@ -32,7 +40,14 @@ CGI::CGI(pollfd& cgiReadPfd, pollfd& cgiWritePfd, const HttpRequest& request, co
 }
 
 CGI::~CGI() {
-
+	if (_readFd1 != -1) close(_readFd1);
+	if (_writeFd1 != -1) close(_writeFd1);
+	if (_readFd2 != -1) close(_readFd2);
+	if (_writeFd2 != -1) close(_writeFd2);
+	if (_pid != -1) {
+		kill(_pid, SIGKILL);
+		waitpid(_pid, nullptr, WNOHANG);
+	}
 }
 
 void CGI::initPipes() {
@@ -57,7 +72,65 @@ void CGI::initPipes() {
 	_writeFd1 = pipe1[1];
 	_readFd2 = pipe2[0];
 	_writeFd2 = pipe2[1];
+}
 
+void CGI::setupChildProcess() {
+	std::string interpreter = getInterpreter();
+	if (_hasError)
+		return;
+
+	char** env = setCGIEnv();
+
+	_pid = fork();
+	if (_pid == -1) {
+		forkError();
+		return;
+	}
+
+	if (_pid == 0)
+		childProcess(interpreter, _scriptPath, env);
+
+	freeCGIEnv(env);
+	close(_readFd1);
+	_readFd1 = -1;
+	close(_writeFd2);
+	_writeFd2 = -1;
+}
+
+void CGI::setupParent(pollfd& cgiReadPfd, pollfd& cgiWritePfd) {
+	cgiReadPfd.fd = _readFd2;
+	cgiReadPfd.events = POLLIN;
+
+	if (!_request.getBody().empty()) {
+		cgiWritePfd.fd = _writeFd1;
+		cgiWritePfd.events = POLLOUT;
+	} else {
+		close(_writeFd1);
+		_writeFd1 = -1;
+	}
+}
+
+void CGI::childProcess(const std::string& interpreter, const std::string& path, char **env) {
+	close(_writeFd1);
+	close(_readFd2);
+	if (dup2(_readFd1, STDIN_FILENO) == -1 || dup2(_writeFd2, STDOUT_FILENO) == -1) {
+		freeCGIEnv(env);
+		close(_readFd1);
+		close(_writeFd2);
+		exit(1);
+	}
+	close(_readFd1);
+	close(_writeFd2);
+
+	char* argv[] = { 
+		const_cast<char*>(interpreter.c_str()), 
+		const_cast<char*>(path.c_str()), 
+		nullptr 
+	};
+	chdir(path.substr(0, path.rfind('/')).c_str());
+	execve(interpreter.c_str(), argv, env);
+	freeCGIEnv(env);
+	exit(1);
 }
 
 std::string CGI::getInterpreter() {
@@ -77,47 +150,17 @@ std::string CGI::getInterpreter() {
 	return interpreter;
 }
 
-void CGI::setupChildProcess() {
-	std::string interpreter = getInterpreter();
-	if (_hasError)
-		return;
-
-	std::string path = makePath(_location.root);
-	char** env = setCGIEnv();
-
-	_pid = fork();
-	if (_pid == -1) {
-		forkError();
+void CGI::validateScript() {
+	if (access(_scriptPath.c_str(), F_OK) == -1) {
+		_hasError = true;
+		_errorCode = 404;
 		return;
 	}
-
-	if (_pid == 0)
-		childProcess(interpreter, path, env);
-
-	freeCGIEnv(env);
-	close(_readFd1);
-	_readFd1 = -1;
-	close(_writeFd2);
-	_writeFd2 = -1;
-}
-
-void CGI::childProcess(const std::string& interpreter, const std::string& path, char **env) {
-	close(_writeFd1);
-	close(_readFd2);
-	dup2(_readFd1, STDIN_FILENO);
-	dup2(_writeFd2, STDOUT_FILENO);
-	close(_readFd1);
-	close(_writeFd2);
-
-	char* argv[] = { 
-		const_cast<char*>(interpreter.c_str()), 
-		const_cast<char*>(path.c_str()), 
-		nullptr 
-	};
-	chdir(path.substr(0, path.rfind('/')).c_str());
-	execve(interpreter.c_str(), argv, env);
-	freeCGIEnv(env);
-	exit(1);
+	if (access(_scriptPath.c_str(), R_OK) == -1) {
+		_hasError = true;
+		_errorCode = 403;
+		return;
+	}
 }
 
 std::string CGI::makePath(const std::string& root) {
@@ -135,13 +178,6 @@ std::string CGI::getExtension(const std::string& path) {
 	if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
 		return "";
 	return path.substr(dot);
-}
-
-void CGI::setupParent(pollfd& cgiReadPfd, pollfd& cgiWritePfd) {
-	cgiReadPfd.fd = _readFd2;
-	cgiReadPfd.events = POLLIN;
-	cgiWritePfd.fd = _writeFd1;
-	cgiWritePfd.events = POLLOUT;
 }
 
 bool CGI::isDone() {
@@ -187,24 +223,25 @@ void CGI::readFromCGI() {
 HttpResponse CGI::getResponse() {
 	HttpResponse response;
 
+	size_t delimLen;
 	size_t headerEnd = _output.find("\r\n\r\n");
-	if (headerEnd == std::string::npos)
+	if (headerEnd != std::string::npos) {
+		delimLen = 4;
+	} else {
 		headerEnd = _output.find("\n\n");
+		delimLen = 2;
+	}
+
 	if (headerEnd == std::string::npos) {
 		response.setStatusCode(500);
+		_hasError = true;
 		return response;
 	}
 
 	std::string headerSection = _output.substr(0, headerEnd);
-	size_t headerEnd = _output.find("\r\n\r\n");
-	size_t delimLen = 4;
-	if (headerEnd == std::string::npos) {
-		headerEnd = _output.find("\n\n");
-		delimLen = 2;
-	}
 	std::string body = _output.substr(headerEnd + delimLen);
 
-	// headers parsen
+	// headers parsing
 	std::istringstream stream(headerSection);
 	std::string line;
 	int statusCode = 200;
@@ -220,13 +257,12 @@ HttpResponse CGI::getResponse() {
 			statusCode = std::stoi(value);
 		else if (key == "Content-Type")
 			response.setContentType(value);
-		else
+		else if (key != "Content-Length")
 			response.setHeader(key, value);
 	}
 
 	response.setStatusCode(statusCode);
 	response.setBody(body);
-	response.setContentLength(body.size());
 	return response;
 }
 
@@ -236,7 +272,7 @@ char** CGI::setCGIEnv() {
 	std::string scriptPath = _request.getPath().substr(_location.path.size());
 	if (scriptPath.empty() || scriptPath[0] != '/')
 		scriptPath = "/" + scriptPath;
-	
+
 	env.push_back("SCRIPT_NAME=" + scriptPath);
 	env.push_back("SCRIPT_FILENAME=" + makePath(_location.root));
 	env.push_back("REQUEST_METHOD=" + _request.getMethod());
@@ -256,6 +292,9 @@ char** CGI::setCGIEnv() {
 
 	const std::map<std::string, std::string>& headers = _request.getHeaders();
 	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++) {
+		std::string lower = lowerCopy(it->first);
+		if (lower == "content-type" || lower == "content-length")
+			continue;
 		std::string key = "HTTP_";
 		for (size_t i = 0; i < it->first.size(); i++) {
 			if (it->first[i] == '-')

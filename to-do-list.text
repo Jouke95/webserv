@@ -1,4 +1,3 @@
-1. CGI implementeren
 2. realpath path traversal check
 3. Just remember that, for chunked requests, your server needs to un-chunk them, the CGI will expect EOF as the end of the body.
 4. Directory zonder trailing slash — overweeg 301 redirect naar /uploads/ in plaats van direct 200 (zoals Nginx doet)

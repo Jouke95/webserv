@@ -115,7 +115,15 @@ bool Server::handleCGI(Connection& conn) {
 		return false;
 	else {
 		HttpResponse response = conn.cgi->getResponse();
-		buildResponse(conn, response);
+		if (conn.cgi->hasError()) {
+			int errorCode = response.getStatusCode();
+			const ServerConfig& server = findServer(conn.listeningPort);
+			RequestHandler errorHandler(server.errorPages, errorCode);
+			buildResponse(conn, errorHandler.getResponse());
+		}
+		else {
+			buildResponse(conn, response);
+		}
 		delete conn.cgi;
 		conn.cgi = nullptr;
 		conn.cgiReadPfd.fd = -1;
@@ -318,6 +326,8 @@ const LocationConfig& Server::findLocation(const ServerConfig& server, const std
 void Server::buildResponse(Connection& conn, const HttpResponse& response) {
 	ResponseBuilder builder(response);
 	conn.client._response = builder.build();
+
+	std::cout << "Response: \n" << conn.client._response << std::endl;
 
 	conn.pfd.events = POLLOUT;
 }

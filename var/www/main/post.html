@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>POST — webserv</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap');
+  :root {
+    --bg: #0a0a0f; --surface: #111118; --border: #1e1e2e;
+    --accent: #7b8cff; --text: #e0e0f0; --muted: #555570;
+    --mono: 'JetBrains Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--mono); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(123,140,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(123,140,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none;
+  }
+  .box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 40px; width: 100%; max-width: 480px; position: relative; z-index: 1; animation: fadeUp 0.4s ease both; }
+  .back { font-size: 11px; color: var(--muted); text-decoration: none; display: block; margin-bottom: 24px; }
+  .back:hover { color: var(--accent); }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; }
+  h1 span { color: var(--accent); }
+  p { font-size: 12px; color: var(--muted); margin-bottom: 32px; }
+  label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+  input, textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px; color: var(--text);
+    font-family: var(--mono); font-size: 13px; margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  textarea { height: 80px; resize: vertical; }
+  button { width: 100%; padding: 14px; background: var(--accent); color: #000; border: none; border-radius: 6px; font-family: var(--mono); font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: 1px; transition: opacity 0.2s; }
+  button:hover { opacity: 0.85; }
+  pre { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; font-size: 12px; margin-top: 24px; white-space: pre-wrap; word-break: break-all; color: #00ff9d; display: none; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+<div class="box">
+  <a class="back" href="/">← back to index</a>
+  <h1>POST <span>form</span></h1>
+  <p>Sends data to /cgi/post.py and shows the response</p>
+
+  <label>name</label>
+  <input type="text" id="name" placeholder="your name">
+  <label>message</label>
+  <textarea id="msg" placeholder="say something"></textarea>
+  <button onclick="send()">SEND POST</button>
+  <pre id="result"></pre>
+</div>
+
+<script>
+async function send() {
+  const body = 'name=' + encodeURIComponent(document.getElementById('name').value)
+             + '&message=' + encodeURIComponent(document.getElementById('msg').value);
+
+  const res = await fetch('/cgi/post.py', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body
+  });
+
+  const text = await res.text();
+  const pre = document.getElementById('result');
+  pre.style.display = 'block';
+  pre.textContent = text;
+}
+</script>
+</body>
+</html>

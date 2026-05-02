@@ -14,60 +14,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static std::string lowerCopy(const std::string& value) {
-	std::string lower = value;
-	std::transform(lower.begin(), lower.end(), lower.begin(),
-		[](unsigned char c) { return std::tolower(c); });
-	return lower;
-}
-
-static std::string trimHeaderValue(const std::string& value) {
-	size_t start = value.find_first_not_of(" \t");
-	if (start == std::string::npos)
-		return "";
-	size_t end = value.find_last_not_of(" \t");
-	return value.substr(start, end - start + 1);
-}
-
-static bool startsWith(const std::string& value, const std::string& prefix) {
-	return value.size() >= prefix.size() && value.compare(0, prefix.size(), prefix) == 0;
-}
-
-static bool hasHeaderToken(const std::string& value, const std::string& token) {
-	std::string wanted = lowerCopy(token);
-	size_t pos = 0;
-
-	while (pos < value.size()) {
-		size_t comma = value.find(',', pos);
-		std::string part = value.substr(pos, comma - pos);
-		size_t semicolon = part.find(';');
-		std::string name = lowerCopy(trimHeaderValue(part.substr(0, semicolon)));
-		if (name == wanted)
-			return true;
-		if (comma == std::string::npos)
-			break;
-		pos = comma + 1;
-	}
-	return false;
-}
-
-static bool isCompressibleContentType(const std::string& contentType) {
-	std::string type = lowerCopy(contentType);
-	size_t semicolon = type.find(';');
-	if (semicolon != std::string::npos)
-		type = type.substr(0, semicolon);
-	type = trimHeaderValue(type);
-
-	return startsWith(type, "text/")
-		|| type == "application/javascript"
-		|| type == "application/json"
-		|| type == "application/xml";
-}
-
-static std::string normalizedContentEncoding(const std::string& value) {
-	return lowerCopy(trimHeaderValue(value));
-}
-
 RequestHandler::RequestHandler(const HttpRequest& request,
 							   const std::map<int, std::string>& errorPages,
 							   const LocationConfig& location,
@@ -245,7 +191,6 @@ void RequestHandler::serveDirList(std::string path) {
 		requestPath += "/";
 
 	_response.setBody(buildDirListHtml(requestPath, dirs, files));
-	_response.setContentLength(_response.getBody().size());
 	_response.setStatusCode(200);
 	_response.setContentType("text/html");
 }
@@ -263,14 +208,68 @@ void RequestHandler::readDirectory(DIR* dir, std::vector<std::string>& dirs, std
 	}
 }
 
+// std::string RequestHandler::buildDirListHtml(const std::string& requestPath, const std::vector<std::string>& dirs, const std::vector<std::string>& files) {
+// 	std::string html = "<html><body><h1>Index of " + requestPath + "</h1><hr><ul>";
+// 	for (size_t i = 0; i < dirs.size(); i++)
+// 		html += "<li><a href=\"" + requestPath + dirs[i] + "\">" + dirs[i] + "</a></li>";
+// 	for (size_t i = 0; i < files.size(); i++)
+// 		html += "<li><a href=\"" + requestPath + files[i] + "\">" + files[i] + "</a></li>";
+// 	html += "</ul><hr></body></html>";
+// 	return html;
+// }
+
 std::string RequestHandler::buildDirListHtml(const std::string& requestPath, const std::vector<std::string>& dirs, const std::vector<std::string>& files) {
-	std::string html = "<html><body><h1>Index of " + requestPath + "</h1><hr><ul>";
-	for (size_t i = 0; i < dirs.size(); i++)
-		html += "<li><a href=\"" + requestPath + dirs[i] + "\">" + dirs[i] + "</a></li>";
-	for (size_t i = 0; i < files.size(); i++)
-		html += "<li><a href=\"" + requestPath + files[i] + "\">" + files[i] + "</a></li>";
-	html += "</ul><hr></body></html>";
-	return html;
+	std::string rows;
+
+	for (size_t i = 0; i < dirs.size(); i++) {
+		rows += "<a class='entry dir' href='" + requestPath + dirs[i] + "'>"
+			"<span class='icon'>📁</span>"
+			"<span class='name'>" + dirs[i] + "</span>"
+			"<span class='type'>dir</span>"
+			"</a>";
+	}
+	for (size_t i = 0; i < files.size(); i++) {
+		rows += "<a class='entry file' href='" + requestPath + files[i] + "'>"
+			"<span class='icon'>📄</span>"
+			"<span class='name'>" + files[i] + "</span>"
+			"<span class='type'>file</span>"
+			"</a>";
+	}
+
+	return "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+		"<title>Index of " + requestPath + "</title>"
+		"<style>"
+		"@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&display=swap');"
+		":root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--accent:#00ff9d;--text:#e0e0f0;--muted:#555570;--mono:'JetBrains Mono',monospace;}"
+		"*{margin:0;padding:0;box-sizing:border-box;}"
+		"body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;padding:48px 24px;}"
+		"body::before{content:'';position:fixed;inset:0;"
+		"background-image:linear-gradient(rgba(0,255,157,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,157,0.03) 1px,transparent 1px);"
+		"background-size:40px 40px;pointer-events:none;}"
+		".wrap{max-width:700px;margin:0 auto;position:relative;z-index:1;}"
+		".back{font-size:11px;color:var(--muted);text-decoration:none;display:block;margin-bottom:32px;}"
+		".back:hover{color:var(--accent);}"
+		".badge{font-size:11px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}"
+		".badge::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);}"
+		"h1{font-size:22px;font-weight:600;margin-bottom:32px;color:var(--text);}"
+		"h1 span{color:var(--accent);}"
+		".entry{display:flex;align-items:center;gap:16px;padding:12px 16px;"
+		"border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);"
+		"transition:background 0.15s,padding-left 0.15s;}"
+		".entry:first-child{border-top:1px solid var(--border);}"
+		".entry:hover{background:var(--surface);padding-left:20px;}"
+		".icon{font-size:16px;width:20px;}"
+		".name{flex:1;font-size:13px;}"
+		".entry.dir .name{color:var(--accent);}"
+		".type{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}"
+		".empty{font-size:13px;color:var(--muted);padding:24px 0;}"
+		"</style></head><body>"
+		"<div class='wrap'>"
+		"<a class='back' href='/'>← back to index</a>"
+		"<div class='badge'>autoindex</div>"
+		"<h1>index of <span>" + requestPath + "</span></h1>"
+		+ (rows.empty() ? "<div class='empty'>empty directory</div>" : rows) +
+		"</div></body></html>";
 }
 
 void RequestHandler::serveFile(const std::string& path) {
@@ -286,7 +285,6 @@ void RequestHandler::serveFile(const std::string& path) {
 
 	std::string body((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	_response.setBody(body);
-	_response.setContentLength(body.size());
 	_response.setStatusCode(200);
 	_response.setContentType(getContentType(path));
 }
@@ -323,7 +321,6 @@ void RequestHandler::applyGzip() {
 		std::string compressedBody(
 			reinterpret_cast<const char*>(compressed.data()), compressed.size());
 		_response.setBody(compressedBody);
-		_response.setContentLength(static_cast<int>(compressedBody.size()));
 		_response.setHeader("Content-Encoding", "gzip");
 
 		const std::map<std::string, std::string>& headers = _response.getHeaders();
@@ -371,13 +368,11 @@ void RequestHandler::errorPage(int errorCode) {
 		std::istreambuf_iterator<char>());
 	_response.setBody(body);
 	_response.setContentType(getContentType(path));
-	_response.setContentLength(body.size());
 }
 
 void RequestHandler::setFallbackError() {
 	_response.setBody("<html><body><h1>Error</h1></body></html>");
 	_response.setContentType("text/html");
-	_response.setContentLength(_response.getBody().size());
 }
 
 std::map<std::string, std::string> RequestHandler::_mimeTypes = {
