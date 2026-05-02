@@ -108,6 +108,7 @@ void CGI::childProcess(const std::string& interpreter, const std::string& path, 
 	dup2(_writeFd2, STDOUT_FILENO);
 	close(_readFd1);
 	close(_writeFd2);
+
 	char* argv[] = { 
 		const_cast<char*>(interpreter.c_str()), 
 		const_cast<char*>(path.c_str()), 
@@ -153,6 +154,80 @@ bool CGI::hasError() {
 
 int CGI::getErrorCode() {
 	return _errorCode;
+}
+
+void CGI::writeToCGI() {
+	const std::string& body = _request.getBody();
+	ssize_t bytes = write(_writeFd1, body.c_str() + _bytesWritten, body.size() - _bytesWritten);
+	if (bytes > 0)
+		_bytesWritten += bytes;
+	if (_bytesWritten >= (ssize_t)body.size()) {
+		close(_writeFd1);
+		_writeFd1 = -1;
+	}
+}
+
+void CGI::readFromCGI() {
+	char buffer[4096];
+	int bytesRead = read(_readFd2, buffer, sizeof(buffer) - 1);
+	if (bytesRead < 0) {
+		_hasError = true;
+		_errorCode = 500;
+		return;
+	}
+	if (bytesRead == 0) {
+		close(_readFd2);
+		_readFd2 = -1;
+		_isDone = true;
+		return;
+	}
+	_output.append(buffer, bytesRead);
+}
+
+HttpResponse CGI::getResponse() {
+	HttpResponse response;
+
+	size_t headerEnd = _output.find("\r\n\r\n");
+	if (headerEnd == std::string::npos)
+		headerEnd = _output.find("\n\n");
+	if (headerEnd == std::string::npos) {
+		response.setStatusCode(500);
+		return response;
+	}
+
+	std::string headerSection = _output.substr(0, headerEnd);
+	size_t headerEnd = _output.find("\r\n\r\n");
+	size_t delimLen = 4;
+	if (headerEnd == std::string::npos) {
+		headerEnd = _output.find("\n\n");
+		delimLen = 2;
+	}
+	std::string body = _output.substr(headerEnd + delimLen);
+
+	// headers parsen
+	std::istringstream stream(headerSection);
+	std::string line;
+	int statusCode = 200;
+	while (std::getline(stream, line)) {
+		if (!line.empty() && line.back() == '\r')
+			line.pop_back();
+		size_t colon = line.find(':');
+		if (colon == std::string::npos)
+			continue;
+		std::string key = line.substr(0, colon);
+		std::string value = line.substr(colon + 2);
+		if (key == "Status")
+			statusCode = std::stoi(value);
+		else if (key == "Content-Type")
+			response.setContentType(value);
+		else
+			response.setHeader(key, value);
+	}
+
+	response.setStatusCode(statusCode);
+	response.setBody(body);
+	response.setContentLength(body.size());
+	return response;
 }
 
 char** CGI::setCGIEnv() {
@@ -205,68 +280,6 @@ void CGI::freeCGIEnv(char** env) {
 	for (size_t i = 0; env[i] != nullptr; i++)
 		delete[] env[i];
 	delete[] env;
-}
-
-void CGI::writeToCGI() {
-	const std::string& body = _request.getBody();
-	ssize_t bytes = write(_writeFd1, body.c_str() + _bytesWritten, body.size() - _bytesWritten);
-	if (bytes > 0)
-		_bytesWritten += bytes;
-	if (_bytesWritten >= (ssize_t)body.size()) {
-		close(_writeFd1);
-		_writeFd1 = -1;
-	}
-}
-
-void CGI::readFromCGI() {
-	char buffer[4096];
-	int bytesRead = read(_readFd2, buffer, sizeof(buffer) - 1);
-	if (bytesRead <= 0) {
-		_isDone = true;
-		return;
-	}
-	buffer[bytesRead] = '\0';
-	_output += buffer;
-}
-
-HttpResponse CGI::getResponse() {
-	HttpResponse response;
-
-	size_t headerEnd = _output.find("\r\n\r\n");
-	if (headerEnd == std::string::npos)
-		headerEnd = _output.find("\n\n");
-	if (headerEnd == std::string::npos) {
-		response.setStatusCode(500);
-		return response;
-	}
-
-	std::string headerSection = _output.substr(0, headerEnd);
-	std::string body = _output.substr(headerEnd + 2);
-
-	// headers parsen
-	std::istringstream stream(headerSection);
-	std::string line;
-	int statusCode = 200;
-	while (std::getline(stream, line)) {
-		if (!line.empty() && line.back() == '\r')
-			line.pop_back();
-		size_t colon = line.find(':');
-		if (colon == std::string::npos)
-			continue;
-		std::string key = line.substr(0, colon);
-		std::string value = line.substr(colon + 2);
-		if (key == "Status")
-			statusCode = std::stoi(value);
-		else if (key == "Content-Type")
-			response.setContentType(value);
-		else
-			response.setHeader(key, value);
-	}
-
-	response.setStatusCode(statusCode);
-	response.setBody(body);
-	response.setContentLength(body.size());
-	return response;
 }
 
 void CGI::forkError() {

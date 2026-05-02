@@ -117,7 +117,6 @@ bool Server::handleCGI(Connection& conn) {
 		HttpResponse response = conn.cgi->getResponse();
 		buildResponse(conn, response);
 		delete conn.cgi;
-		close(conn.cgiReadPfd.fd);
 		conn.cgi = nullptr;
 		conn.cgiReadPfd.fd = -1;
 		conn.cgiWritePfd.fd = -1;
