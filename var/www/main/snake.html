@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #0d0d0d;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #00ff99;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+        }
+
+        .subtitle {
+            color: #444;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+        }
+
+        .layout {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hud {
+            display: flex;
+            gap: 40px;
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .hud-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hud-label {
+            font-size: 0.65rem;
+            color: #444;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hud-value {
+            font-size: 1.4rem;
+            color: #00ff99;
+            font-weight: bold;
+        }
+
+        canvas {
+            border: 1px solid #222;
+            display: block;
+            image-rendering: pixelated;
+        }
+
+        .message {
+            font-size: 0.8rem;
+            color: #555;
+            letter-spacing: 1px;
+            height: 20px;
+            text-align: center;
+        }
+
+        .message.highlight {
+            color: #00ff99;
+        }
+
+        /* Highscores */
+        .scores-panel {
+            width: 200px;
+        }
+
+        .scores-panel h2 {
+            font-size: 0.7rem;
+            color: #444;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #1e1e1e;
+        }
+
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #1a1a1a;
+            font-size: 0.8rem;
+        }
+
+        .score-row .rank {
+            color: #333;
+            width: 20px;
+        }
+
+        .score-row .name {
+            color: #aaa;
+            flex: 1;
+            padding: 0 8px;
+        }
+
+        .score-row .pts {
+            color: #00ff99;
+        }
+
+        .score-row.top .rank { color: #00ff99; }
+        .score-row.top .name { color: #e0e0e0; }
+
+        .no-scores {
+            color: #333;
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Name input overlay */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 32px;
+            text-align: center;
+            width: 280px;
+        }
+
+        .modal h2 {
+            color: #00ff99;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .modal .final-score {
+            font-size: 2rem;
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 24px;
+        }
+
+        .modal label {
+            font-size: 0.7rem;
+            color: #555;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .modal input {
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            padding: 8px 12px;
+            width: 100%;
+            border-radius: 4px;
+            text-align: center;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .modal input:focus {
+            border-color: #00ff99;
+        }
+
+        .modal button {
+            background: #00ff99;
+            color: #0d0d0d;
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            padding: 10px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .modal button:hover {
+            background: #00cc77;
+        }
+
+        .modal .skip {
+            background: transparent;
+            color: #333;
+            font-size: 0.7rem;
+        }
+
+        .modal .skip:hover {
+            color: #555;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+
+<h1>&#9608; Snake</h1>
+<p class="subtitle">use arrow keys &mdash; press space to start</p>
+
+<div class="layout">
+    <div class="game-area">
+        <div class="hud">
+            <div class="hud-item">
+                <span class="hud-label">Score</span>
+                <span class="hud-value" id="score">0</span>
+            </div>
+            <div class="hud-item" style="text-align:right">
+                <span class="hud-label">Best</span>
+                <span class="hud-value" id="best">0</span>
+            </div>
+        </div>
+        <canvas id="canvas" width="400" height="400"></canvas>
+        <div class="message" id="msg">press space to start</div>
+    </div>
+
+    <div class="scores-panel">
+        <h2>&#9650; Highscores</h2>
+        <div id="scores-list"><p class="no-scores">loading...</p></div>
+    </div>
+</div>
+
+<!-- Game over modal -->
+<div class="overlay" id="overlay">
+    <div class="modal">
+        <h2>Game Over</h2>
+        <div class="final-score" id="final-score">0</div>
+        <label>Enter your name</label>
+        <input type="text" id="name-input" maxlength="12" placeholder="anonymous" autocomplete="off">
+        <button id="submit-btn">Submit Score</button>
+        <button class="skip" id="skip-btn">skip</button>
+    </div>
+</div>
+
+<script>
+const GRID = 20;
+const CELL = 400 / GRID;
+const CGI_URL = '/cgi/scores.py';
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let snake, dir, nextDir, food, score, best = 0, gameLoop, state;
+
+function init() {
+    snake = [
+        {x: 10, y: 10},
+        {x: 9,  y: 10},
+        {x: 8,  y: 10},
+    ];
+    dir     = {x: 1, y: 0};
+    nextDir = {x: 1, y: 0};
+    score   = 0;
+    state   = 'idle'; // idle | running | dead
+    spawnFood();
+    updateHUD();
+    draw();
+    setMsg('press space to start');
+}
+
+function spawnFood() {
+    let pos;
+    do {
+        pos = {
+            x: Math.floor(Math.random() * GRID),
+            y: Math.floor(Math.random() * GRID)
+        };
+    } while (snake.some(s => s.x === pos.x && s.y === pos.y));
+    food = pos;
+}
+
+function start() {
+    if (state === 'running') return;
+    state = 'running';
+    setMsg('');
+    clearInterval(gameLoop);
+    gameLoop = setInterval(tick, 120);
+}
+
+function tick() {
+    dir = nextDir;
+    const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+    // Wall collision
+    if (head.x < 0 || head.x >= GRID || head.y < 0 || head.y >= GRID) {
+        return gameover();
+    }
+    // Self collision
+    if (snake.some(s => s.x === head.x && s.y === head.y)) {
+        return gameover();
+    }
+
+    snake.unshift(head);
+
+    if (head.x === food.x && head.y === food.y) {
+        score++;
+        updateHUD();
+        spawnFood();
+    } else {
+        snake.pop();
+    }
+
+    draw();
+}
+
+function gameover() {
+    clearInterval(gameLoop);
+    state = 'dead';
+    if (score > best) best = score;
+    updateHUD();
+    draw();
+    setTimeout(() => showModal(), 300);
+}
+
+function draw() {
+    // Background
+    ctx.fillStyle = '#0d0d0d';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grid (subtle)
+    ctx.strokeStyle = '#111';
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= GRID; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * CELL, 0);
+        ctx.lineTo(i * CELL, canvas.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * CELL);
+        ctx.lineTo(canvas.width, i * CELL);
+        ctx.stroke();
+    }
+
+    // Food
+    const fx = food.x * CELL;
+    const fy = food.y * CELL;
+    ctx.fillStyle = '#ff4444';
+    ctx.beginPath();
+    ctx.arc(fx + CELL/2, fy + CELL/2, CELL/2 - 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Snake
+    snake.forEach((seg, i) => {
+        const t = i / snake.length;
+        const alpha = 1 - t * 0.5;
+        ctx.fillStyle = i === 0 ? `rgba(0,255,153,${alpha})` : `rgba(0,200,120,${alpha})`;
+        const pad = i === 0 ? 1 : 2;
+        ctx.beginPath();
+        ctx.roundRect(seg.x * CELL + pad, seg.y * CELL + pad, CELL - pad*2, CELL - pad*2, 3);
+        ctx.fill();
+    });
+
+    // Dead overlay
+    if (state === 'dead') {
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ff4444';
+        ctx.font = 'bold 28px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
+        ctx.textAlign = 'left';
+    }
+}
+
+function updateHUD() {
+    document.getElementById('score').textContent = score;
+    document.getElementById('best').textContent  = best;
+}
+
+function setMsg(txt, highlight = false) {
+    const el = document.getElementById('msg');
+    el.textContent = txt;
+    el.className = 'message' + (highlight ? ' highlight' : '');
+}
+
+// Input
+document.addEventListener('keydown', e => {
+    if (e.code === 'Space') {
+        if (state === 'idle') start();
+        return;
+    }
+    const map = {
+        ArrowUp:    {x:  0, y: -1},
+        ArrowDown:  {x:  0, y:  1},
+        ArrowLeft:  {x: -1, y:  0},
+        ArrowRight: {x:  1, y:  0},
+    };
+    const d = map[e.code];
+    if (!d) return;
+    // Prevent 180 turns
+    if (d.x === -dir.x && d.y === -dir.y) return;
+    nextDir = d;
+    e.preventDefault();
+});
+
+// Modal
+function showModal() {
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('name-input').value = '';
+    document.getElementById('overlay').classList.add('active');
+    document.getElementById('name-input').focus();
+}
+
+function hideModal() {
+    document.getElementById('overlay').classList.remove('active');
+}
+
+document.getElementById('submit-btn').addEventListener('click', async () => {
+    const name = document.getElementById('name-input').value.trim() || 'anonymous';
+    hideModal();
+    await submitScore(name, score);
+    loadScores();
+    setMsg('score submitted!', true);
+    setTimeout(() => { init(); }, 1500);
+});
+
+document.getElementById('skip-btn').addEventListener('click', () => {
+    hideModal();
+    init();
+});
+
+document.getElementById('name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('submit-btn').click();
+});
+
+// CGI calls
+async function submitScore(name, pts) {
+    try {
+        const body = `name=${encodeURIComponent(name)}&score=${pts}`;
+        await fetch(CGI_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body
+        });
+    } catch (e) {
+        console.error('submit failed', e);
+    }
+}
+
+async function loadScores() {
+    try {
+        const res  = await fetch(CGI_URL);
+        const data = await res.json();
+        renderScores(data);
+        if (data.length > 0) best = Math.max(best, data[0].score);
+        updateHUD();
+    } catch (e) {
+        document.getElementById('scores-list').innerHTML = '<p class="no-scores">unavailable</p>';
+    }
+}
+
+function renderScores(data) {
+    const el = document.getElementById('scores-list');
+    if (!data.length) {
+        el.innerHTML = '<p class="no-scores">no scores yet</p>';
+        return;
+    }
+    el.innerHTML = data.map((s, i) => `
+        <div class="score-row ${i < 3 ? 'top' : ''}">
+            <span class="rank">${i + 1}</span>
+            <span class="name">${escHtml(s.name)}</span>
+            <span class="pts">${s.score}</span>
+        </div>
+    `).join('');
+}
+
+function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Boot
+loadScores();
+init();
+</script>
+</body>
+</html>
