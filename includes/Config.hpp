@@ -31,7 +31,6 @@ struct ServerConfig {
 	ServerConfig() : port(0), maxBodySize(0) {}
 };
 
-fdsaf
 class Config {
 	private:
 		std::vector<ServerConfig> _servers;
