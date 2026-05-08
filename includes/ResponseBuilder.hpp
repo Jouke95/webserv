@@ -8,9 +8,10 @@
 class ResponseBuilder {
 	private:
 		HttpResponse _response;
+		std::string _sessionId;
 
 	public:
-		ResponseBuilder(const HttpResponse& response);
+		ResponseBuilder(const HttpResponse& response, std::string sessionId);
 		~ResponseBuilder();
 
 		std::string build();

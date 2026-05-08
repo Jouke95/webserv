@@ -39,8 +39,8 @@ void Server::start()
 		sockaddr_in addr = createAddress(server);
 
 		if (bind(serverFD, (sockaddr*)&addr, sizeof(addr)) < 0) {
-			std::cerr << "Warning: bind() failed on " 
-					  << server.host << ":" << server.port 
+			std::cerr << "Warning: bind() failed on "
+					  << server.host << ":" << server.port
 					  << " - skipping" << std::endl;
 			close(serverFD);
 			continue;
@@ -208,8 +208,14 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request, conn.listeningPort);
+	conn.sessionId = parser.getRequest().getHeader("cookie");
+
+	if (!validateCookie(parser)){
+		conn.sessionId = ("session_id=" + generateSessionId());
+		_sessions[conn.sessionId] = std::map<std::string, std::string>();
+	}
 	parser.printRequest();
-	
+
 	const ServerConfig& server = findServer(conn.listeningPort);
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
 
@@ -237,6 +243,37 @@ bool Server::handleRequest(Connection& conn) {
 	buildResponse(conn, handler.getResponse());
 	return true;
 }
+
+bool Server::validateCookie(RequestParser& parser){
+	std::string cookieHeader = parser.getRequest().getHeader("cookie");
+
+	if (cookieHeader.empty())
+		return false;
+
+	if (_sessions.find(cookieHeader) == _sessions.end())
+		return false;
+
+	return true;
+}
+
+std::string Server::generateSessionId() {
+	std::string emojis[] = {"🍩", "🍪", "🥮", "🎂", "🍰", "🧁", "🥧", "🥠", "🥞"};
+	std::string id;
+	srand(time(NULL));
+	for (int i = 0; i < 6; i++)
+		id += emojis[rand() % 9];
+	return id;
+}
+
+// std::string Server::generateSessionId(){
+// 	std::string id;
+// 	const char chars[] = "abcdef0123456789";
+// 	srand(time(NULL));
+// 	for (int i = 0; i < 6; i++)
+// 		id += chars[rand() % 16];
+// 	return id;
+// }
+
 
 bool Server::isCGI(const LocationConfig& location, const std::string& path) {
 	if (location.cgiExtensions.empty()) {
@@ -330,7 +367,7 @@ const LocationConfig& Server::findLocation(const ServerConfig& server, const std
 }
 
 void Server::buildResponse(Connection& conn, const HttpResponse& response) {
-	ResponseBuilder builder(response);
+	ResponseBuilder builder(response, conn.sessionId);
 	conn.client._response = builder.build();
 
 	std::cout << "Response: \n" << conn.client._response << std::endl;

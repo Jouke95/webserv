@@ -9,10 +9,12 @@
 #include <poll.h>
 #include <string>
 #include <vector>
+#include <map>
 
 class CGI;
 class HttpRequest;
 class HttpResponse;
+class RequestParser;
 
 class Server {
 	private:
@@ -30,11 +32,12 @@ class Server {
 			time_t timestamp;
 			bool isServer;
 			int listeningPort;
+			std::string sessionId;
 		};
 
 		std::vector<Connection> _connections;
 		Config _config;
-
+		std::map<std::string, std::map<std::string, std::string>> _sessions;
 		int _numberOfConnections = 0;
 
 		// Methods
@@ -60,7 +63,8 @@ class Server {
 		void 		startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location, const ServerConfig& server);
 		bool		isCGIClient(Connection& conn);
 		bool		handleCGI(Connection& conn);
-
+		bool		validateCookie(RequestParser& parser);
+		std::string	generateSessionId();
 
 	public:
 		Server() = delete;
