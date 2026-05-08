@@ -21,7 +21,6 @@ class RequestValidator {
 		bool isValidPath();
 		bool isValidMethod();
 		bool isValidContentLength();
-		bool isValidContentType();
 
 		static std::vector<std::string> _knownMethods;
 		static std::vector<std::string> _implementedMethods;

@@ -1,8 +1,19 @@
-2. realpath path traversal check
-3. Just remember that, for chunked requests, your server needs to un-chunk them, the CGI will expect EOF as the end of the body.
-4. Directory zonder trailing slash — overweeg 301 redirect naar /uploads/ in plaats van direct 200 (zoals Nginx doet)
-5. Multipart/form-data parsing — bestandsnaam uit de body halen bij file uploads, en bestand opslaan met die naam in uploadStore
-6. CTRL + C opruimen
+1. realpath path traversal check
+2. Directory zonder trailing slash — overweeg 301 redirect naar /uploads/ in plaats van direct 200 (zoals Nginx doet)
+3. Multipart/form-data parsing — bestandsnaam uit de body halen bij file uploads, en bestand opslaan met die naam in uploadStore
+4. CTRL + C opruimen
 
 CGI: 
 close (fd) goed checken
+
+void CGI::writeToCGI() {
+	const std::string& body = _request.getBody();
+	ssize_t bytes = write(_writeFd1, body.c_str() + _bytesWritten, body.size() - _bytesWritten);
+	// return van write nog checken op 0 en -1
+	if (bytes > 0)
+		_bytesWritten += bytes;
+	if (_bytesWritten >= (ssize_t)body.size()) {
+		close(_writeFd1);
+		_writeFd1 = -1;
+	}
+}

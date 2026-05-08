@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 
-RequestParser::RequestParser(const std::string& request, int listeningPort) : _requestString(request), _listeningPort(listeningPort) {
+RequestParser::RequestParser(const std::string& request, int listeningPort) : _requestString(request), _listeningPort(listeningPort), _chunked(false) {
 	parse();
 }
 
@@ -12,10 +12,13 @@ RequestParser::~RequestParser() {}
 
 void RequestParser::parse() {
 	std::istringstream stream(_requestString);
-
-	parseRequestLine(stream);
-	parseHeaders(stream);
-	parseBody(stream);
+	try {
+		parseRequestLine(stream);
+		parseHeaders(stream);
+		parseBody(stream);
+	} catch (const std::exception&) {
+		_httpRequest.setParseError(true);
+	}
 }
 
 void RequestParser::parseRequestLine(std::istringstream& stream) {
@@ -65,12 +68,51 @@ void RequestParser::parseHeaders(std::istringstream& stream) {
 			_httpRequest.setUserAgent(value);
 		else if (key == "Connection")
 			_httpRequest.setConnection(value);
+		else if (key == "Transfer-Encoding") {
+			if (value == "chunked")
+				_chunked = true;
+		}
 	}
 }
 
 void RequestParser::parseBody(std::istringstream& stream) {
+	if (_chunked) {
+		parseChunkedBody(stream);
+		return;
+	}
+
 	std::string body(std::istreambuf_iterator<char>(stream), {});
 	_httpRequest.setBody(body);
+}
+
+void RequestParser::parseChunkedBody(std::istringstream& stream) {
+	std::string body;
+
+	while (true) {
+		std::string hexLine;
+		if (!std::getline(stream, hexLine))
+			throw std::runtime_error("400");
+
+		if (!hexLine.empty() && hexLine.back() == '\r')
+			hexLine.pop_back();
+
+		size_t chunkSize = std::stoul(hexLine, nullptr, 16);
+
+		if (chunkSize == 0)
+			break;
+
+		std::string chunk(chunkSize, '\0');
+		if (!stream.read(&chunk[0], chunkSize)) {
+			throw std::runtime_error("400");
+		}
+
+		stream.ignore(2);
+
+		body.append(chunk);
+	}
+
+	_httpRequest.setBody(body);
+	_httpRequest.setContentLength(body.size());
 }
 
 bool RequestParser::parseHeaderLine(const std::string& line, std::string& key, std::string& value) {

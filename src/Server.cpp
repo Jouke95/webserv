@@ -81,6 +81,7 @@ void Server::handleConnection(size_t &i)
 	Connection &conn = _connections[i];
 
 	if (isTimedOut(conn)) {
+		std::cout << "[timeout] client " << conn.pfd.fd << " — no activity, closing connection\n";
 		removeConnection(i);
 		return;
 	}
@@ -109,26 +110,27 @@ bool Server::isCGIClient(Connection& conn) {
 bool Server::handleCGI(Connection& conn) {
 	if (conn.cgiWritePfd.revents & POLLOUT)
 		conn.cgi->writeToCGI();
-	if (conn.cgiReadPfd.revents & (POLLIN | POLLHUP))
+	else if (conn.cgiReadPfd.revents & (POLLIN | POLLHUP))
 		conn.cgi->readFromCGI();
+
 	if (!conn.cgi->isDone())
 		return false;
-	else {
-		HttpResponse response = conn.cgi->getResponse();
-		if (conn.cgi->hasError()) {
-			int errorCode = response.getStatusCode();
-			const ServerConfig& server = findServer(conn.listeningPort);
-			RequestHandler errorHandler(server.errorPages, errorCode);
-			buildResponse(conn, errorHandler.getResponse());
-		}
-		else {
-			buildResponse(conn, response);
-		}
-		delete conn.cgi;
-		conn.cgi = nullptr;
-		conn.cgiReadPfd.fd = -1;
-		conn.cgiWritePfd.fd = -1;
+
+	HttpResponse response = conn.cgi->getResponse();
+	if (conn.cgi->hasError()) {
+		int errorCode = response.getStatusCode();
+		const ServerConfig& server = findServer(conn.listeningPort);
+		RequestHandler errorHandler(server.errorPages, errorCode);
+		buildResponse(conn, errorHandler.getResponse());
 	}
+	else {
+		buildResponse(conn, response);
+	}
+	delete conn.cgi;
+	conn.cgi = nullptr;
+	conn.cgiReadPfd.fd = -1;
+	conn.cgiWritePfd.fd = -1;
+
 	return true;
 }
 
@@ -206,7 +208,7 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request, conn.listeningPort);
-	// parser.printRequest();
+	parser.printRequest();
 	
 	const ServerConfig& server = findServer(conn.listeningPort);
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
@@ -279,7 +281,11 @@ bool Server::isCompleteRequest(Connection& conn) {
 	if (headerEnd == std::string::npos)
 		return false;
 
-	size_t pos = request.find("Content-Length");
+	size_t pos = request.find("Transfer-Encoding: chunked");
+	if (pos != std::string::npos && pos < headerEnd)
+		return request.find("\r\n0\r\n\r\n", headerEnd) != std::string::npos;
+
+	pos = request.find("Content-Length");
 	if (pos != std::string::npos) {
 		pos += CONTENT_LENGTH_PREFIX;
 		size_t lineEnd = request.find("\r\n", pos);
@@ -337,7 +343,7 @@ bool Server::sendResponse(Connection &conn) {
 	ssize_t& bytesSent = conn.client.bytesSent;
 
 	ssize_t bytes = write(conn.pfd.fd, response.c_str() + bytesSent, response.size() - bytesSent);
-	if (bytes == -1)
+	if (bytes <= 0)
 		return true;
 
 	bytesSent += bytes;

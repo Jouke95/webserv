@@ -11,6 +11,12 @@ RequestValidator::RequestValidator(const HttpRequest& request, const ServerConfi
 	  _isValid(true),
 	  _errorCode(0)
 {
+	if (_request.hasParseError()) {
+		_errorCode = 400;
+		_isValid = false;
+		return;
+	}
+
 	if (!isValidVersion())
 		return;
 	if (!isValidHostHeader())
@@ -21,8 +27,6 @@ RequestValidator::RequestValidator(const HttpRequest& request, const ServerConfi
 		return;
 	if (_request.getMethod() == "POST") {
 		if (!isValidContentLength())
-			return;
-		if (!isValidContentType())
 			return;
 	}
 }
@@ -101,17 +105,6 @@ bool RequestValidator::isValidContentLength() {
 
 	if (contentLength >= 0 && (size_t)contentLength > _server.maxBodySize) {
 		_errorCode = 413;
-		_isValid = false;
-		return false;
-	}
-	return true;
-}
-
-bool RequestValidator::isValidContentType() {
-	if (_request.getBody().empty())
-		return true;
-	if (_request.getContentType().empty()) {
-		_errorCode = 400;
 		_isValid = false;
 		return false;
 	}

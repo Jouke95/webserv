@@ -14,6 +14,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <iostream>
+
 RequestHandler::RequestHandler(const HttpRequest& request,
 							   const std::map<int, std::string>& errorPages,
 							   const LocationConfig& location,
@@ -42,8 +44,8 @@ void RequestHandler::handle() {
 	if (redirectCheck())
 		return;
 
-	if (!decodeRequestBody())
-		return;
+	// if (!decodeRequestBody())
+	// 	return;
 
 	std::string method = _request.getMethod();
 
@@ -54,7 +56,7 @@ void RequestHandler::handle() {
 	else if (method == "DELETE")
 		handleDelete();
 
-	applyGzip();
+	// applyGzip();
 }
 
 bool RequestHandler::redirectCheck() {
@@ -129,6 +131,12 @@ void RequestHandler::handlePost(){
 		return;
 	}
 	std::string path = makePath(_location.uploadStore);
+
+	if (path.back() == '/') {
+		errorPage(400);
+		return;
+	}
+
 	if (access(path.c_str(), F_OK) == 0) {
 		errorPage(409);
 		return;

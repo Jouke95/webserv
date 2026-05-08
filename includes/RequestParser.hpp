@@ -11,6 +11,7 @@ class RequestParser {
 		HttpRequest _httpRequest;
 		std::string _requestString;
 		int _listeningPort;
+		bool _chunked;
 
 		void parse();
 		void parseRequestLine(std::istringstream& stream);
@@ -18,6 +19,7 @@ class RequestParser {
 		void parseBody(std::istringstream& stream);
 		bool parseHeaderLine(const std::string& line, std::string& key, std::string& value);
 		void parseHostLine(const std::string& value);
+		void parseChunkedBody(std::istringstream& stream);
 
 	public:
 		RequestParser() = delete;

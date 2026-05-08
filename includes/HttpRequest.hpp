@@ -19,6 +19,8 @@ class HttpRequest {
 		std::string	_body;
 		std::map<std::string, std::string> _headers;
 
+		bool _parseError;
+
 	public:
 		HttpRequest();
 		~HttpRequest();
@@ -50,7 +52,10 @@ class HttpRequest {
 		const std::string&	getConnection() const;
 		const std::string&	getBody() const;
 		std::string			getHeader(const std::string& key) const;
-		bool				hasHeaderToken(const std::string& key, const std::string& token) const;
+
+		void	setParseError(bool error) { _parseError = error; }
+		bool	hasParseError() const { return _parseError; }
+		bool	hasHeaderToken(const std::string& key, const std::string& token) const;
 
 		const std::map<std::string, std::string>& getHeaders() const;
 };

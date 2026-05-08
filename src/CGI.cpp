@@ -195,8 +195,13 @@ int CGI::getErrorCode() {
 void CGI::writeToCGI() {
 	const std::string& body = _request.getBody();
 	ssize_t bytes = write(_writeFd1, body.c_str() + _bytesWritten, body.size() - _bytesWritten);
-	if (bytes > 0)
-		_bytesWritten += bytes;
+	if (bytes <= 0) {
+		_hasError = true;
+		_errorCode = 500;
+		_isDone = true;
+		return;
+	}
+	_bytesWritten += bytes;
 	if (_bytesWritten >= (ssize_t)body.size()) {
 		close(_writeFd1);
 		_writeFd1 = -1;
@@ -206,9 +211,10 @@ void CGI::writeToCGI() {
 void CGI::readFromCGI() {
 	char buffer[4096];
 	int bytesRead = read(_readFd2, buffer, sizeof(buffer) - 1);
-	if (bytesRead < 0) {
+	if (bytesRead == -1) {
 		_hasError = true;
 		_errorCode = 500;
+		_isDone = true;
 		return;
 	}
 	if (bytesRead == 0) {
