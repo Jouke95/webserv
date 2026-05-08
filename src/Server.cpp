@@ -69,6 +69,7 @@ sockaddr_in Server::createAddress(const ServerConfig& server) {
 
 void Server::run()
 {
+	srand(time(NULL));
 	while (true) {
 		pollConnections();
 		for (size_t i = 0; i < _connections.size(); i++)
@@ -208,72 +209,25 @@ bool Server::handleRequest(Connection& conn) {
 		return true;
 
 	RequestParser parser(conn.client._request, conn.listeningPort);
-	conn.sessionId = parser.getRequest().getHeader("cookie");
-
-	if (!validateCookie(parser)){
-		conn.sessionId = ("session_id=" + generateSessionId());
-		_sessions[conn.sessionId] = std::map<std::string, std::string>();
-	}
-	parser.printRequest();
-
+	initCookieSession(conn, parser);
+	
 	const ServerConfig& server = findServer(conn.listeningPort);
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
-
-	RequestValidator requestValidator(parser.getRequest(), server, location);
-
-	if (!requestValidator.isValid()) {
-		RequestHandler errorHandler(server.errorPages, requestValidator.errorCode());
-		buildResponse(conn, errorHandler.getResponse());
-		return true;
-	}
-
+	
+	if (!validateRequest(conn, parser.getRequest(), server, location))
+	return true;
+	
 	if (isCGI(location, parser.getRequest().getPath())) {
-		startCGI(conn, parser.getRequest(), location, server);
-		if (conn.cgi->hasError()) {
-			int errorCode = conn.cgi->getErrorCode();
-			delete conn.cgi;
-			conn.cgi = nullptr;
-			RequestHandler errorHandler(server.errorPages, errorCode);
-			buildResponse(conn, errorHandler.getResponse());
-		}
+		startCGIRequest(conn, parser.getRequest(), location, server);
 		return true;
 	}
-
+	
+	countVisits(conn.sessionId);
+	conn.visitCount = _sessions[conn.sessionId]["visits"];
 	RequestHandler handler(parser.getRequest(), server.errorPages, location, server.maxBodySize);
 	buildResponse(conn, handler.getResponse());
 	return true;
 }
-
-bool Server::validateCookie(RequestParser& parser){
-	std::string cookieHeader = parser.getRequest().getHeader("cookie");
-
-	if (cookieHeader.empty())
-		return false;
-
-	if (_sessions.find(cookieHeader) == _sessions.end())
-		return false;
-
-	return true;
-}
-
-std::string Server::generateSessionId() {
-	std::string emojis[] = {"🍩", "🍪", "🥮", "🎂", "🍰", "🧁", "🥧", "🥠", "🥞"};
-	std::string id;
-	srand(time(NULL));
-	for (int i = 0; i < 6; i++)
-		id += emojis[rand() % 9];
-	return id;
-}
-
-// std::string Server::generateSessionId(){
-// 	std::string id;
-// 	const char chars[] = "abcdef0123456789";
-// 	srand(time(NULL));
-// 	for (int i = 0; i < 6; i++)
-// 		id += chars[rand() % 16];
-// 	return id;
-// }
-
 
 bool Server::isCGI(const LocationConfig& location, const std::string& path) {
 	if (location.cgiExtensions.empty()) {
@@ -285,6 +239,17 @@ bool Server::isCGI(const LocationConfig& location, const std::string& path) {
 			return true;
 	}
 	return false;
+}
+
+void Server::startCGIRequest(Connection& conn, const HttpRequest& req, const LocationConfig& location, const ServerConfig& server) {
+	startCGI(conn, req, location, server);
+	if (conn.cgi->hasError()) {
+		int errorCode = conn.cgi->getErrorCode();
+		delete conn.cgi;
+		conn.cgi = nullptr;
+		RequestHandler errorHandler(server.errorPages, errorCode);
+		buildResponse(conn, errorHandler.getResponse());
+	}
 }
 
 std::string Server::getExtension(const std::string& path) {
@@ -299,6 +264,15 @@ std::string Server::getExtension(const std::string& path) {
 void Server::startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location, const ServerConfig& server) {
 	conn.cgi = new CGI(conn.cgiReadPfd, conn.cgiWritePfd, request, location, server);
 	conn.pfd.events = 0;
+}
+
+bool Server::validateRequest(Connection& conn, const HttpRequest& req, const ServerConfig& server, const LocationConfig& location) {
+	RequestValidator validator(req, server, location);
+	if (validator.isValid())
+		return true;
+	RequestHandler errorHandler(server.errorPages, validator.errorCode());
+	buildResponse(conn, errorHandler.getResponse());
+	return false;
 }
 
 bool Server::readFromClient(Connection& conn) {
@@ -367,7 +341,7 @@ const LocationConfig& Server::findLocation(const ServerConfig& server, const std
 }
 
 void Server::buildResponse(Connection& conn, const HttpResponse& response) {
-	ResponseBuilder builder(response, conn.sessionId);
+	ResponseBuilder builder(response, conn.sessionId, conn.visitCount);
 	conn.client._response = builder.build();
 
 	std::cout << "Response: \n" << conn.client._response << std::endl;
@@ -405,4 +379,45 @@ void Server::pollConnections() {
 		_connections[i].cgiReadPfd.revents = fds[i*3+1].revents;
 		_connections[i].cgiWritePfd.revents = fds[i*3+2].revents;
 	}
+}
+
+void Server::initCookieSession(Connection& conn, const RequestParser& parser) {
+	conn.sessionId = parser.getRequest().getHeader("cookie");
+	if (!isKnownSession(conn.sessionId)) {
+		conn.sessionId = ("session_id=" + generateSessionId());
+		_sessions[conn.sessionId] = std::map<std::string, std::string>();
+	}
+}
+
+bool Server::isKnownSession(std::string cookieHeader){
+	if (cookieHeader.empty())
+		return false;
+	if (_sessions.find(cookieHeader) == _sessions.end())
+		return false;
+
+	return true;
+}
+
+std::string Server::generateSessionId() {
+	std::string emojis[] = {"🍩", "🍪", "🥮", "🎂", "🍰", "🧁", "🥧", "🥠", "🥞"};
+	std::string id;
+	for (int i = 0; i < 6; i++)
+		id += emojis[rand() % 9];
+	return id;
+}
+
+// std::string Server::generateSessionId(){
+// 	std::string id;
+// 	const char chars[] = "abcdef0123456789";
+// 	for (int i = 0; i < 6; i++)
+// 		id += chars[rand() % 16];
+// 	return id;
+// }
+
+void Server::countVisits(const std::string& sessionId) {
+	std::string str = _sessions[sessionId]["visits"];
+	int count = atoi(str.c_str());
+	count++;
+	str = std::to_string(count);
+	_sessions[sessionId]["visits"] = str;
 }

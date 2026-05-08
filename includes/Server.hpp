@@ -33,6 +33,7 @@ class Server {
 			bool isServer;
 			int listeningPort;
 			std::string sessionId;
+			std::string visitCount;
 		};
 
 		std::vector<Connection> _connections;
@@ -59,12 +60,17 @@ class Server {
 		const LocationConfig&	findLocation(const ServerConfig& server, const std::string& path);
 		void		buildResponse(Connection& conn, const HttpResponse& response);
 		bool		isCGI(const LocationConfig& location, const std::string& path);
+		void		startCGIRequest(Connection& conn, const HttpRequest& req, const LocationConfig& location, const ServerConfig& server);
 		std::string	getExtension(const std::string& path);
 		void 		startCGI(Connection& conn, const HttpRequest& request, const LocationConfig& location, const ServerConfig& server);
 		bool		isCGIClient(Connection& conn);
 		bool		handleCGI(Connection& conn);
-		bool		validateCookie(RequestParser& parser);
+		bool		validateRequest(Connection& conn, const HttpRequest& req, const ServerConfig& server, const LocationConfig& location);
+		void		initCookieSession(Connection& conn, const RequestParser& parser);
+		bool		isKnownSession(std::string cookieHeader);
 		std::string	generateSessionId();
+		void		countVisits(const std::string& sessionId);
+
 
 	public:
 		Server() = delete;

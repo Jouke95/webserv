@@ -1,6 +1,6 @@
 #include "ResponseBuilder.hpp"
 
-ResponseBuilder::ResponseBuilder(const HttpResponse& response, std::string sessionId) : _response(response), _sessionId(sessionId) {}
+ResponseBuilder::ResponseBuilder(const HttpResponse& response, std::string sessionId, std::string visitCount) : _response(response), _sessionId(sessionId), _visitCount(visitCount) {}
 
 ResponseBuilder::~ResponseBuilder() {}
 
@@ -18,6 +18,7 @@ std::string ResponseBuilder::build() {
 	response += "Content-Length: " + std::to_string(body.size()) + "\r\n";
 	response += "Connection: close\r\n";
 	response += "Set-Cookie: " + _sessionId + "; Path=/; Max-Age=86400\r\n";
+	response += "Visit-Count: " + _visitCount + "\r\n";
 
 	const std::map<std::string, std::string>& headers = _response.getHeaders();
 	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
