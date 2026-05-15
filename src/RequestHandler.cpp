@@ -133,8 +133,8 @@ void RequestHandler::handlePost(){
 	std::string path = makePath(_location.uploadStore);
 
 	if (path.back() == '/') {
-		errorPage(400);
-		return;
+		static int counter = 1;
+		path += std::to_string(counter++);
 	}
 
 	if (access(path.c_str(), F_OK) == 0) {

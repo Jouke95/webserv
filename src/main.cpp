@@ -14,15 +14,21 @@ void signalHandler(int sig){
 }
 
 int main(int ac, char **av) {
-	if (ac != 2) {
+	std::string configFile;
+	if (ac == 1)
+		configFile = "default.conf";
+	else if (ac == 2)
+		configFile = av[1];
+	else {
 		std::cerr << "Usage: ./webserv [config file]\n";
 		return 1;
 	}
 
 	signal(SIGINT, signalHandler);
 	signal(SIGTERM, signalHandler);
+
 	try {
-		Config config(av[1]);
+		Config config(configFile);
 		ConfigValidator configVal(config);
 		Server server(config);
 
@@ -32,5 +38,6 @@ int main(int ac, char **av) {
 		std::cerr << "Fatal error: " << e.what() << "\n";
 		return 1;
 	}
+
 	return 0;
 }

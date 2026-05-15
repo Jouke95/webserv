@@ -97,6 +97,13 @@
 			margin-bottom: 0.5rem;
 		}
 
+		.field-label span {
+			color: var(--green-dim);
+			font-size: 0.65rem;
+			margin-left: 0.5rem;
+			opacity: 0.6;
+		}
+
 		.field {
 			margin-bottom: 1.5rem;
 		}
@@ -197,7 +204,7 @@
 		<p class="desc">POST to /uploads/ — plain text only</p>
 
 		<div class="field">
-			<div class="field-label">FILENAME</div>
+			<div class="field-label">FILENAME <span>// optional — leave empty for auto</span></div>
 			<input type="text" id="filename" placeholder="mijnbestand.txt" spellcheck="false">
 		</div>
 
@@ -217,11 +224,6 @@
 			const content = document.getElementById('content').value;
 			const status = document.getElementById('status');
 
-			if (!filename) {
-				status.innerHTML = '<span class="status-err">[ERROR] filename required</span>';
-				return;
-			}
-
 			if (!content) {
 				status.innerHTML = '<span class="status-err">[ERROR] content is empty</span>';
 				return;
@@ -230,14 +232,17 @@
 			status.innerHTML = 'transmitting...';
 
 			try {
-				const res = await fetch('/uploads/' + filename, {
+				const url = filename ? '/uploads/' + filename : '/uploads/';
+
+				const res = await fetch(url, {
 					method: 'POST',
 					headers: { 'Content-Type': 'text/plain' },
 					body: content
 				});
 
 				if (res.status === 201) {
-					status.innerHTML = '<span class="status-ok">[OK] ' + res.status + ' — file uploaded: /uploads/' + filename + '</span>';
+					const displayName = filename || 'auto-generated';
+					status.innerHTML = '<span class="status-ok">[OK] ' + res.status + ' — file uploaded: ' + displayName + '</span>';
 					document.getElementById('content').value = '';
 					document.getElementById('filename').value = '';
 				} else {
