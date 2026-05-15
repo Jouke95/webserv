@@ -70,12 +70,22 @@ sockaddr_in Server::createAddress(const ServerConfig& server) {
 void Server::run()
 {
 	srand(time(NULL));
-	while (true) {
+	while (g_running) {
 		pollConnections();
 		for (size_t i = 0; i < _connections.size(); i++)
 			handleConnection(i);
 	}
 }
+
+// void Server::run()
+// {
+// 	srand(time(NULL));
+// 	while (true) {
+// 		pollConnections();
+// 		for (size_t i = 0; i < _connections.size(); i++)
+// 			handleConnection(i);
+// 	}
+// }
 
 void Server::handleConnection(size_t &i)
 {
@@ -210,18 +220,18 @@ bool Server::handleRequest(Connection& conn) {
 
 	RequestParser parser(conn.client._request, conn.listeningPort);
 	initCookieSession(conn, parser);
-	
+
 	const ServerConfig& server = findServer(conn.listeningPort);
 	const LocationConfig& location = findLocation(server, parser.getRequest().getPath());
-	
+
 	if (!validateRequest(conn, parser.getRequest(), server, location))
 	return true;
-	
+
 	if (isCGI(location, parser.getRequest().getPath())) {
 		startCGIRequest(conn, parser.getRequest(), location, server);
 		return true;
 	}
-	
+
 	countVisits(conn.sessionId);
 	conn.visitCount = _sessions[conn.sessionId]["visits"];
 	RequestHandler handler(parser.getRequest(), server.errorPages, location, server.maxBodySize);

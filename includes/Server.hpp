@@ -10,7 +10,9 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <csignal>
 
+extern volatile sig_atomic_t g_running;
 class CGI;
 class HttpRequest;
 class HttpResponse;

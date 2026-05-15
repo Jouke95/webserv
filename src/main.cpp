@@ -4,6 +4,14 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <csignal>
+
+volatile sig_atomic_t g_running = 1;
+
+void signalHandler(int sig){
+	(void)sig;
+	g_running = 0;
+}
 
 int main(int ac, char **av) {
 	if (ac != 2) {
@@ -11,6 +19,8 @@ int main(int ac, char **av) {
 		return 1;
 	}
 
+	signal(SIGINT, signalHandler);
+	signal(SIGTERM, signalHandler);
 	try {
 		Config config(av[1]);
 		ConfigValidator configVal(config);
